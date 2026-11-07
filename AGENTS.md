@@ -37,8 +37,8 @@ node tests/gestures.test.mjs
 
 - 开工前先看上一个 agent 改了什么：`git log --oneline -10`、`git status`（有没提交的改动，说明上一个 agent 可能是额度突然用完中断的，先看 `git diff` 再继续）。
 - 收工前：跑测试 → 更新本文件 → `git add -A && git commit -m "简短中文说明"`，提交信息末尾加一行注明是哪个 agent 做的。
-- 远程仓库：**https://github.com/yuwensu123/sweet-little-bubble-bee**（私有；原名 pet-gesture，旧地址会自动跳转。本机文件夹 `~/Documents/claud/sweet-little-bubble-bee`）。开工前 `git pull`，收工提交后 `git push`，这样网页版、云端的 agent 也能接着做。
-- 本机的 GitHub 命令行工具在 `~/.local/bin/gh`（可能不在 PATH 里），已登录 yuwensu123。
+- 远程仓库：**https://github.com/yuwen799/sweet-little-bubble-bee**（私有；原名 pet-gesture，用户名原为 yuwensu123，旧地址会自动跳转。本机文件夹 `~/Documents/claud/sweet-little-bubble-bee`）。开工前 `git pull`，收工提交后 `git push`，这样网页版、云端的 agent 也能接着做。
+- 本机的 GitHub 命令行工具在 `~/.local/bin/gh`（可能不在 PATH 里），已登录。用户 GitHub 用户名：yuwen799（原 yuwensu123，`gh auth status` 里可能还显示旧名，不影响使用）。
 - 改坏了想回退，先问用户，不要自己 `reset --hard`。
 
 ## 代码结构
@@ -112,6 +112,7 @@ node tests/gestures.test.mjs
 
 ## 开发日志（最新的写在最上面）
 
+- **2026-11-07 · Claude**：用户把 GitHub 用户名改成 yuwen799，已同步远程地址和提交署名。
 - **2026-11-07 · Claude**：项目、文件夹、网页标题统一改名为 sweet-little-bubble-bee。
 - **2026-11-07 · Claude**：上传到 GitHub；用户把仓库改名为 sweet-little-bubble-bee，已同步远程地址。
 - **2026-11-07 · Claude**：新增 `roll` 翻肚皮和揉肚皮，加 `facing` 手心朝向判断，手的大小改成只用手腕到中指根；测试搬进项目，共 16 项全部通过；写了这份交接文档；开启 git，做了第一次提交。

@@ -1,5 +1,5 @@
 // 手势识别测试：用模拟的手部关键点检查每个手势能不能认对、会不会误触发。
-// 运行：node tests/gestures.test.mjs （在 pet-gesture 目录下）
+// 运行：node tests/gestures.test.mjs （在项目根目录下）
 
 import { GestureDetector, classifyPose } from '../gestures.js';
 import { CONFIG } from '../config.js';

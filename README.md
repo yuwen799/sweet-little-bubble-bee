@@ -1,4 +1,6 @@
-# 🐶 手势遛狗
+# 🐶 Sweet Little Bubble Bee
+
+（仓库名 sweet-little-bubble-bee，原名「手势遛狗」）
 
 对着摄像头比手势，屏幕里的狗狗就会做对应的动作。
 用 MediaPipe 识别手上的 21 个关节点，纯网页实现，不用安装任何东西。
@@ -10,7 +12,7 @@
 或者在终端里运行：
 
 ```bash
-cd pet-gesture && python3 -m http.server 8765
+cd sweet-little-bubble-bee && python3 -m http.server 8765
 ```
 
 然后用 Chrome / Safari 打开 http://localhost:8765。

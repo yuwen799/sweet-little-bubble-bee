@@ -37,7 +37,8 @@ node tests/gestures.test.mjs
 
 - 开工前先看上一个 agent 改了什么：`git log --oneline -10`、`git status`（有没提交的改动，说明上一个 agent 可能是额度突然用完中断的，先看 `git diff` 再继续）。
 - 收工前：跑测试 → 更新本文件 → `git add -A && git commit -m "简短中文说明"`，提交信息末尾加一行注明是哪个 agent 做的。
-- 只在本地提交，没有远程仓库，不要 push。
+- 远程仓库：**https://github.com/yuwensu123/pet-gesture**（私有）。开工前 `git pull`，收工提交后 `git push`，这样网页版、云端的 agent 也能接着做。
+- 本机的 GitHub 命令行工具在 `~/.local/bin/gh`（可能不在 PATH 里），已登录 yuwensu123。
 - 改坏了想回退，先问用户，不要自己 `reset --hard`。
 
 ## 代码结构

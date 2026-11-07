@@ -1,0 +1,209 @@
+// ============================================================
+//  宠物：状态机 + 显示（内置卡通狗 或 你自己的视频/图片素材）
+// ============================================================
+
+// 显示用的动画名 → config.actions 里的素材名
+const MEDIA_KEY = {
+  idle: 'idle', spin: 'spin', sit: 'sit', walk: 'leave',
+  away: 'away', run: 'come', happy: 'come', pet: 'pet', roll: 'roll',
+};
+
+const MOVING = ['spin', 'walk', 'run', 'happy'];
+
+export class Pet {
+  /**
+   * @param el  { stage, wrap, dog, video, img, hearts }
+   * @param cfg CONFIG
+   */
+  constructor(el, cfg) {
+    this.el = el;
+    this.cfg = cfg;
+    this.base = 'stand'; // 'stand' | 'sit' | 'roll' | 'away'
+    this.busy = false;   // 正在播放一次性的动作（转圈/走开/跑来）
+    this.petting = false;
+    this.broken = new Set(); // 加载失败的素材
+    this.lastHeart = 0;
+
+    el.stage.style.setProperty('--away-scale', cfg.away.scale);
+    el.stage.style.setProperty('--away-y', cfg.away.offsetY);
+
+    el.video.addEventListener('ended', () => this.onEnd && this.onEnd());
+    const onErr = (media) => () => {
+      if (!this.curKey || !media.getAttribute('src')) return;
+      console.warn(`素材加载失败，改用卡通狗：${this.cfg.actions[this.curKey]?.src}`);
+      this.broken.add(this.curKey);
+      this.render(this.curAnim);
+      if (this.onEnd && this.busy) this.armTimer(this.curDur);
+    };
+    el.video.addEventListener('error', onErr(el.video));
+    el.img.addEventListener('error', onErr(el.img));
+
+    this.render('idle');
+  }
+
+  get name() { return this.cfg.petName; }
+
+  /** 执行动作。返回 { ok, msg } */
+  do(action, opts = {}) {
+    if (this.busy) return { ok: false };
+    const far = this.base === 'away';
+    const A = this.cfg.actions;
+
+    if (action !== 'pet') this.stopPetting(false);
+
+    switch (action) {
+      case 'spin':
+        if (far) return this.tooFar();
+        this.play('spin', A.spin.duration || 1300, () => { this.base = 'stand'; this.render('idle'); });
+        return { ok: true };
+
+      case 'sit':
+        if (far) return this.tooFar();
+        this.base = 'sit';
+        this.render('sit');
+        return { ok: true };
+
+      case 'roll':
+        if (far) return this.tooFar();
+        if (this.base === 'roll') return { ok: true };
+        this.base = 'roll';
+        this.render('roll');
+        return { ok: true };
+
+      case 'leave': {
+        if (far) return { ok: false, msg: `${this.name}已经走开啦，手掌往回收叫它回来` };
+        const dur = A.leave.duration || 2200;
+        this.el.stage.style.setProperty('--move-dur', `${dur}ms`);
+        this.el.stage.classList.add('away');
+        this.play('walk', dur, () => { this.base = 'away'; this.render('away'); });
+        return { ok: true };
+      }
+
+      case 'come': {
+        const dur = A.come.duration || 1100;
+        if (far) {
+          this.el.stage.style.setProperty('--move-dur', `${dur}ms`);
+          this.el.stage.classList.remove('away');
+          this.play('run', dur, () => { this.base = 'stand'; this.render('idle'); });
+        } else {
+          this.play('happy', 900, () => { this.base = 'stand'; this.render('idle'); });
+        }
+        return { ok: true };
+      }
+
+      case 'pet':
+        if (far) return this.tooFar();
+        if (!this.petting) { this.petting = true; this.render('pet'); }
+        clearTimeout(this.petTimer);
+        this.petTimer = setTimeout(() => this.stopPetting(true), opts.hold || 900);
+        this.spawnHeart();
+        return { ok: true };
+    }
+    return { ok: false };
+  }
+
+  tooFar() {
+    return { ok: false, msg: `${this.name}离得太远了，先把手掌往回收，叫它跑过来` };
+  }
+
+  stopPetting(rerender) {
+    clearTimeout(this.petTimer);
+    if (!this.petting) return;
+    this.petting = false;
+    if (rerender) this.render(this.restingAnim());
+  }
+
+  /** 不做动作时该显示的样子 */
+  restingAnim() {
+    return { sit: 'sit', roll: 'roll', away: 'away' }[this.base] || 'idle';
+  }
+
+  /** 播放一次性动作，结束后调用 done */
+  play(anim, ms, done) {
+    this.busy = true;
+    this.curDur = ms;
+    const finish = () => {
+      if (!this.busy) return;
+      this.busy = false;
+      this.onEnd = null;
+      clearTimeout(this.timer);
+      done && done();
+    };
+    this.onEnd = finish;
+    const mode = this.render(anim);
+    // 视频：等播完（'ended'），最多等 15 秒；其他：按时长
+    this.armTimer(mode === 'video' ? 15000 : ms);
+  }
+
+  armTimer(ms) {
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.onEnd && this.onEnd(), ms);
+  }
+
+  /** 找到某个动画要用的素材地址；没有就返回 '' */
+  srcFor(anim) {
+    const A = this.cfg.actions;
+    let key = MEDIA_KEY[anim];
+    if (key === 'away' && (!A.away?.src || this.broken.has('away'))) key = 'idle';
+    // 翻肚皮时被摸 = 揉肚皮；没有专门的素材就用摸头的
+    if (anim === 'pet' && this.base === 'roll' && A.bellyRub?.src && !this.broken.has('bellyRub')) key = 'bellyRub';
+    const src = A[key]?.src || '';
+    return { key, src: this.broken.has(key) ? '' : src };
+  }
+
+  /** 切换显示。返回 'svg' | 'video' | 'img' */
+  render(anim) {
+    const { dog, video, img } = this.el;
+    let posture = 'stand';
+    if (anim === 'sit' || anim === 'away') posture = 'sit';
+    else if (anim === 'roll') posture = 'roll';
+    else if (!MOVING.includes(anim) && (this.base === 'sit' || this.base === 'roll')) posture = this.base;
+    dog.className = `dog posture-${posture} st-${anim}`;
+    this.el.wrap.classList.toggle('rolled', posture === 'roll');
+    // 让 CSS 动画每次都从头播
+    void dog.offsetWidth;
+
+    const { key, src } = this.srcFor(anim);
+    this.curAnim = anim;
+    this.curKey = key;
+
+    if (!src) {
+      dog.hidden = false;
+      video.hidden = true;
+      img.hidden = true;
+      video.pause();
+      return 'svg';
+    }
+
+    const isVideo = /\.(mp4|webm|mov|m4v|ogv)(\?.*)?$/i.test(src);
+    dog.hidden = true;
+    if (isVideo) {
+      img.hidden = true;
+      if (video.getAttribute('src') !== src) video.setAttribute('src', src);
+      video.loop = !!this.cfg.actions[key]?.loop;
+      video.hidden = false;
+      try { video.currentTime = 0; } catch (_) { /* 还没加载 */ }
+      video.play().catch(() => {});
+      return 'video';
+    }
+    video.hidden = true;
+    video.pause();
+    if (img.getAttribute('src') !== src) img.setAttribute('src', src);
+    img.hidden = false;
+    return 'img';
+  }
+
+  spawnHeart() {
+    const now = performance.now();
+    if (now - this.lastHeart < 220) return;
+    this.lastHeart = now;
+    const h = document.createElement('span');
+    h.className = 'heart';
+    h.textContent = ['❤', '💕', '💗'][Math.floor(Math.random() * 3)];
+    h.style.left = `${38 + Math.random() * 24}%`;
+    h.style.top = this.base === 'roll' ? '42%' : '12%'; // 翻肚皮时爱心从肚子冒出来
+    h.style.setProperty('--drift', `${(Math.random() - 0.5) * 60}px`);
+    this.el.hearts.appendChild(h);
+    setTimeout(() => h.remove(), 1400);
+  }
+}

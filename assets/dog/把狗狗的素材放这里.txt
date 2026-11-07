@@ -1,0 +1,2 @@
+把自家狗狗的动作视频 / gif 放进这个文件夹，然后打开上一层的 config.js，把文件名填进去。
+例：spin.mp4  sit.mp4  leave.mp4  come.mp4  pet.mp4  idle.mp4

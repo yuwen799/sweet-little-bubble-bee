@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>手势遛狗</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="stage" class="stage">
+    <div class="wall"></div>
+    <div class="floor"></div>
+
+    <div id="petWrap" class="pet-wrap">
+      <div id="hearts" class="hearts"></div>
+
+      <!-- 内置卡通狗（占位用，config.js 里填了素材就会换成你的视频/图片） -->
+      <div id="dog" class="dog posture-stand st-idle">
+        <svg class="dog-svg" viewBox="0 0 300 300" aria-label="卡通狗">
+          <ellipse class="shadow" cx="150" cy="284" rx="78" ry="11"/>
+
+          <g class="tail tail-back">
+            <path d="M204 222 C236 214 248 182 232 158" fill="none" stroke="#D98A45" stroke-width="17" stroke-linecap="round"/>
+          </g>
+
+          <g class="body">
+            <ellipse class="haunch" cx="96" cy="254" rx="32" ry="26" fill="#E09650"/>
+            <ellipse class="haunch" cx="204" cy="254" rx="32" ry="26" fill="#E09650"/>
+            <ellipse cx="150" cy="222" rx="66" ry="58" fill="#E8A15C"/>
+            <ellipse class="belly" cx="150" cy="234" rx="38" ry="40" fill="#FFF3E2"/>
+          </g>
+
+          <g class="legs">
+            <g class="leg leg-l">
+              <rect x="110" y="236" width="24" height="42" rx="12" fill="#E8A15C"/>
+              <ellipse cx="122" cy="276" rx="16" ry="10" fill="#FFF3E2"/>
+            </g>
+            <g class="leg leg-r">
+              <rect x="166" y="236" width="24" height="42" rx="12" fill="#E8A15C"/>
+              <ellipse cx="178" cy="276" rx="16" ry="10" fill="#FFF3E2"/>
+            </g>
+          </g>
+
+          <g class="tail tail-front">
+            <path d="M150 226 C176 214 182 186 168 168" fill="none" stroke="#D98A45" stroke-width="17" stroke-linecap="round"/>
+          </g>
+
+          <g class="head">
+            <g class="ear ear-l">
+              <path d="M96 92 L84 30 L132 66 Z" fill="#D98A45" stroke="#D98A45" stroke-width="10" stroke-linejoin="round"/>
+              <path class="ear-in" d="M100 80 L94 46 L122 68 Z" fill="#F6C9A8"/>
+            </g>
+            <g class="ear ear-r">
+              <path d="M204 92 L216 30 L168 66 Z" fill="#D98A45" stroke="#D98A45" stroke-width="10" stroke-linejoin="round"/>
+              <path class="ear-in" d="M200 80 L206 46 L178 68 Z" fill="#F6C9A8"/>
+            </g>
+            <ellipse cx="150" cy="118" rx="70" ry="64" fill="#E8A15C"/>
+            <g class="face">
+              <ellipse cx="150" cy="150" rx="42" ry="30" fill="#FFF3E2"/>
+              <ellipse class="cheek" cx="102" cy="140" rx="12" ry="8" fill="#FF9AA2"/>
+              <ellipse class="cheek" cx="198" cy="140" rx="12" ry="8" fill="#FF9AA2"/>
+              <g class="eyes-open">
+                <circle cx="122" cy="112" r="9.5" fill="#2B1D14"/>
+                <circle cx="125.5" cy="108" r="3.2" fill="#fff"/>
+                <circle cx="178" cy="112" r="9.5" fill="#2B1D14"/>
+                <circle cx="181.5" cy="108" r="3.2" fill="#fff"/>
+              </g>
+              <g class="eyes-closed" fill="none" stroke="#2B1D14" stroke-width="4.5" stroke-linecap="round">
+                <path d="M111 115 Q122 103 133 115"/>
+                <path d="M167 115 Q178 103 189 115"/>
+              </g>
+              <path class="tongue" d="M141 156 Q150 184 159 156 Z" fill="#FF7A8A"/>
+              <ellipse cx="150" cy="137" rx="11" ry="8" fill="#2B1D14"/>
+              <path d="M150 145 L150 153 M150 153 Q141 162 133 155 M150 153 Q159 162 167 155"
+                    fill="none" stroke="#2B1D14" stroke-width="3.5" stroke-linecap="round"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+
+      <video id="petVideo" class="pet-media" playsinline muted hidden></video>
+      <img id="petImg" class="pet-media" alt="" hidden>
+    </div>
+  </main>
+
+  <header class="topbar">
+    <div class="brand">🐶 手势遛狗</div>
+    <div id="camStatus" class="chip">摄像头未开启</div>
+    <div id="poseChip" class="chip">手势：—</div>
+  </header>
+
+  <aside class="guide" aria-label="手势说明">
+    <h2>怎么玩</h2>
+    <ol>
+      <li data-action="spin"><span class="ico">☝️</span><span class="how">食指画个圈</span><span class="what">转圈</span><kbd>1</kbd></li>
+      <li data-action="sit"><span class="ico">✌️</span><span class="how">两指往下滑</span><span class="what">坐下</span><kbd>2</kbd></li>
+      <li data-action="leave"><span class="ico">🖐</span><span class="how">手掌往屏幕推</span><span class="what">走开</span><kbd>3</kbd></li>
+      <li data-action="come"><span class="ico">🖐</span><span class="how">手掌往回收</span><span class="what">跑过来</span><kbd>4</kbd></li>
+      <li data-action="pet"><span class="ico">🖐</span><span class="how">手掌左右摆</span><span class="what">摸头</span><kbd>5</kbd></li>
+      <li data-action="roll"><span class="ico">🫳</span><span class="how">手掌翻个面</span><span class="what">翻肚皮</span><kbd>6</kbd></li>
+    </ol>
+    <p class="hint">翻肚皮时再左右摆手 = 揉肚皮。没有摄像头？点条目或按键盘 1–6 也能试。</p>
+  </aside>
+
+  <div id="camBox" class="cam off">
+    <video id="cam" playsinline muted></video>
+    <canvas id="overlay"></canvas>
+    <button id="camBtn" type="button">📷 开启摄像头</button>
+  </div>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

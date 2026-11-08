@@ -149,6 +149,8 @@ node tests/gestures.test.mjs
 
 ## 开发日志（最新的写在最上面）
 
+- **2026-11-08 · Claude**：按用户选择（方法一）公开上线：仓库 `yuwen799/sweet-little-bubble-bee` 改成公开，开了 GitHub Pages（main 分支根目录）。**公开网址：https://yuwen799.github.io/sweet-little-bubble-bee/** ——以后每次 git push 都会自动更新（等一两分钟）。打开过线上网址，图片都 200、动作能播、控制台没报错。公开前检查过仓库：没有密码/密钥，提交作者是 GitHub noreply 邮箱。注意：现在所有文件（包括这份交接文档）任何人都能看到，别往仓库里放私人东西。
+
 - **2026-11-08 · Claude**：按用户要求：① 扔球和被夸换顺序：说明列表扔球 8、被夸 9，`main.js` 的 `ACTIONS` 同步调换（按键跟着变），README 手势表也换了。② 背景音乐音量减半（`sound.js` 里 musicBus 0.5 → 0.25），音效不变。③ 装饰贴纸不再随机：`config.decor` 改回固定数组，位置是用户截图圈出来的——蓝卫衣贴在狗狗屏幕里左上的空白处（新支持 `left` / `top` 百分比贴在窗口里面，类 `.deco-in`），粉蝴蝶结狗狗窗口右上、厨师狗狗窗口右下、跳舞摄像头窗口左下；大小 170 / 125 / 140 / 95 拉开差别。在 1440x900、1920x1000、手机 375 宽看过，不遮字、不出界；按 8 是扔球、9 是被夸。只本地提交。
 
 - **2026-11-08 · Claude**：用户的「最后改动」四件事。① 中英文切换：`i18n.js` 默认英文，`?lang=zh|en` 优先，其次 localStorage `bubble-lang`；菜单栏 `#langBtn`（显示另一种语言），点了记下来并带 `?lang=` 重新载入（`switchLanguage()`）；`applyLanguage()` 中英文都会设按钮提示和版权文字。② 声音：新文件 `sound.js`，Web Audio 现场合成 8-bit 音效和背景小曲（C 大调 112 BPM，方波主旋律 + 三角波低音），不用音频文件；音效默认开、音乐默认关，开关记在 localStorage（`bubble-sfx` / `bubble-music`），浏览器要先有一次点击/按键才出声。菜单栏 `#musicBtn`（♪ ON/OFF）、`#sfxBtn`（🔊/🔇）。`pet.sfx` 由 main.js 设成 `play`，pet.js 里的特效积木（pop/puff/orbit/word/burst/confetti/shatter/screenShake/stickerShow 等）和动作（转圈、趴下、扔球…）都会叫对应音效；同名音效 60ms 内只响一次。贴纸点击有声音，自动蹦不出声。③ 版权：页面最底下 `#copyright`（中英文各一句，年份自动），新增 `LICENSE`（All rights reserved + MediaPipe Apache-2.0、Silkscreen OFL）。④ 装饰贴纸随机：`config.decor` 改成 `{ stickers, slots, rot }`，五个量过不挡字的位置（狗狗窗口右上/右下、摄像头窗口右上/左下/右下）各有自己的大小范围；每次打开随机分配位置、大小（彼此至少差 14px）、角度和小偏移。用脚本各跑 40 次随机摆放：电脑 1440x900 和手机 375 都不遮字；手机加了 `overflow-x: clip` 防止偶尔能左右滑。手动测过全部动作和音乐开关、语言来回切换，控制台没有报错。只本地提交。

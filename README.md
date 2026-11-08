@@ -1,5 +1,7 @@
 # 🐶 Sweet Little Bubble Bee
 
+**在线试玩：https://yuwen799.github.io/sweet-little-bubble-bee/** （需要允许摄像头；没有摄像头可以按键盘 1–9、0）
+
 （仓库名 sweet-little-bubble-bee，原名「手势遛狗」）
 
 对着摄像头比手势，屏幕里的狗狗就会做对应的动作。

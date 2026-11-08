@@ -136,6 +136,11 @@ export class Pet {
       this.play('fetch', A.fetch.duration || 4000, () => { this.base = 'stand'; this.render('idle'); });
       return;
     }
+    // 走开、跑过来都有像素精灵图：用它们拼一整段捡球
+    if (A.leave?.frames > 1 && A.come?.frames > 1 && this.srcFor('walk').src && this.srcFor('run').src) {
+      this.fetchPixel();
+      return;
+    }
     const { stage, ball } = this.el;
     this.busy = true;
     const at = (ms, fn) => setTimeout(fn, ms);
@@ -167,6 +172,100 @@ export class Pet {
       for (let k = 0; k < 4; k++) setTimeout(() => this.spawnHeart(undefined, true), k * 150);
     });
     at(5000, () => { if (ball.className === 'ball dropped') ball.className = 'ball'; });
+  }
+
+  /**
+   * 像素狗捡球：球扔到远处 → 狗走过去（走开动画完整播完）→ 叼起来
+   * → 叼着球跑回来（跑过来动画，球跟着嘴）→ 坐好，把球放在你面前
+   */
+  fetchPixel() {
+    const A = this.cfg.actions;
+    const { stage, wrap, ball, mouth } = this.el;
+    const goMs = A.leave.duration || 1500;
+    const backMs = A.come.duration || 2100;
+    this.busy = true;
+    const id = (this.fetchId = (this.fetchId || 0) + 1); // 下一次扔球开始后，这次的收尾就不管了
+    const at = (ms, fn) => setTimeout(() => { if (id === this.fetchId) fn(); }, ms);
+
+    // 用狗现在的位置算球该落在哪（狗走到远处后脚边）
+    const h = wrap.offsetHeight;
+    const cx = wrap.offsetLeft; // .pet-wrap 用 left:50% + translateX(-50%)，所以这就是中心
+    const bottom = wrap.offsetTop + h;
+    const k = this.cfg.away.scale;
+    const awayBottom = bottom + (parseFloat(this.cfg.away.offsetY) / 100) * h;
+    const feet = 0.05; // 精灵图里脚底离画面底边的比例
+    const size = 0.12 * h; // 近处的球有多大（和叼在嘴里一样大）
+    const startX = cx + 0.22 * h, startY = bottom - 0.08 * h;
+    const endX = cx + 0.1 * h * k, endY = awayBottom - feet * h * k - 0.06 * h * k;
+    const pos = (x, y, s, r = 0) => `translate(${x - size / 2}px, ${y - size / 2}px) scale(${s}) rotate(${r}deg)`;
+
+    ball.getAnimations().forEach((a) => a.cancel());
+    ball.className = 'ball px';
+    ball.style.width = `${size}px`;
+    // 抛出去：往上飞、越飞越小，落地弹一下
+    ball.animate([
+      { transform: pos(startX, startY, 1.3, 0), offset: 0 },
+      { transform: pos((startX + endX) / 2, endY - 0.5 * h, 0.75, 300), offset: 0.5 },
+      { transform: pos(endX, endY, k, 520), offset: 0.82 },
+      { transform: pos(endX, endY - 0.06 * h * k, k, 560), offset: 0.91 },
+      { transform: pos(endX, endY, k, 600), offset: 1 },
+    ], { duration: 900, easing: 'ease-out', fill: 'forwards' });
+
+    // 狗走过去（和球同时出发，走开动画完整播完）
+    stage.style.setProperty('--move-dur', `${goMs}ms`);
+    stage.classList.add('away');
+    this.render('walk');
+
+    // 走到了：地上的球没了，叼进嘴里，转身跑回来
+    // 嘴的位置：跑过来精灵图每一帧舌头的位置（184×224 的帧里），球盖在嘴上
+    const MOUTH = [[108, 109], [115, 110], [115, 106], [116, 104], [112, 115], [102, 110], [91, 94]];
+    const place = (i) => {
+      const [fx, fy] = MOUTH[Math.min(i, MOUTH.length - 1)];
+      const fw = 184 / 224; // 帧的宽高比，精灵图在狗框里水平居中
+      mouth.style.left = `${((1 - fw) / 2 + (fx / 184) * fw) * 100}%`;
+      mouth.style.top = `${(fy / 224) * 100}%`;
+    };
+    at(goMs, () => {
+      ball.getAnimations().forEach((a) => a.cancel());
+      ball.className = 'ball';
+      this.onFrame = (key, i) => { if (key === 'come') place(i); };
+      place(0);
+      mouth.hidden = false;
+      stage.style.setProperty('--move-dur', `${backMs}ms`);
+      stage.classList.remove('away');
+      this.render('run');
+    });
+
+    // 跑回来坐好，停一下再把球放下
+    at(goMs + backMs + 350, () => {
+      this.onFrame = null;
+      mouth.hidden = true;
+      const fw = 184 / 224;
+      const [fx, fy] = MOUTH[MOUTH.length - 1];
+      const mx = cx - h / 2 + ((1 - fw) / 2 + (fx / 184) * fw) * h;
+      const my = bottom - h + (fy / 224) * h;
+      const floorY = bottom - 0.03 * h - size / 2;
+      const dropX = mx + 0.2 * h;
+      ball.className = 'ball px';
+      ball.animate([
+        { transform: pos(mx, my, 1, 0), offset: 0 },
+        { transform: pos(dropX, floorY, 1, 90), offset: 0.55, easing: 'ease-out' },
+        { transform: pos(dropX + 0.03 * h, floorY - 0.06 * h, 1, 130), offset: 0.75, easing: 'ease-in' },
+        { transform: pos(dropX + 0.05 * h, floorY, 1, 160), offset: 1 },
+      ], { duration: 600, easing: 'ease-in', fill: 'forwards' });
+      this.base = 'stand';
+      this.busy = false;
+      this.render('idle');
+      for (let n = 0; n < 4; n++) setTimeout(() => this.spawnHeart(undefined, true), n * 150);
+    });
+    // 球在你面前放一会儿再消失
+    at(goMs + backMs + 3200, () => {
+      if (!ball.classList.contains('px')) return;
+      ball.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 400, fill: 'forwards' }).onfinish = () => {
+        ball.getAnimations().forEach((a) => a.cancel());
+        ball.className = 'ball';
+      };
+    });
   }
 
   /** 屏幕中间冒出一颗大爱心 */
@@ -330,6 +429,7 @@ export class Pet {
     el.hidden = false;
     let i = 0;
     const show = () => {
+      if (this.onFrame) this.onFrame(key, i);
       const c = i % cols;
       const r = Math.floor(i / cols);
       el.style.backgroundPosition = `${cols > 1 ? (c / (cols - 1)) * 100 : 0}% ${rows > 1 ? (r / (rows - 1)) * 100 : 0}%`;

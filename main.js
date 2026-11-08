@@ -16,7 +16,7 @@ const ACTIONS = ['spin', 'sit', 'leave', 'come', 'pet', 'shake', 'dead', 'praise
 const KEYS = '1234567890'; // 和 ACTIONS 一一对应
 
 const pet = new Pet(
-  { stage: $('stage'), wrap: $('petWrap'), dog: $('dog'), video: $('petVideo'), img: $('petImg'), sprite: $('petSprite'), hearts: $('hearts'), ball: $('ball') },
+  { stage: $('stage'), wrap: $('petWrap'), dog: $('dog'), video: $('petVideo'), img: $('petImg'), sprite: $('petSprite'), hearts: $('hearts'), ball: $('ball'), mouth: $('mouthBall') },
   CONFIG,
 );
 const detector = new GestureDetector(CONFIG.gestures);

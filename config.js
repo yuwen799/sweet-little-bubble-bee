@@ -31,7 +31,7 @@ export const CONFIG = {
     lying: { src: 'assets/dog/lying.png', frames: 8, fps: 3.33, loop: true }, //    趴着不动、摇尾巴（趴下后一直是这个样子）
     leave: { src: 'assets/dog/leave.png', frames: 12, cols: 6, fps: 8, duration: 1500 }, // ③ 走开：一下转身，背对你跑远（精灵图；缩小和往远处移由代码做，duration 和精灵图一样长）
     away:  { src: '' },                             //    走远后待着的样子（留空就用 idle）
-    come:  { src: 'assets/dog/come.png', frames: 7, fps: 3.33, duration: 2100 },  // ④ 跑过来：从远处跑回来坐好（精灵图；放大回到面前由代码做）
+    come:  { src: 'assets/dog/come.png', frames: 16, cols: 8, fps: 8, duration: 2000 }, // ④ 跑过来：从远处一路跑回来（正面跑步循环）再坐好（精灵图；放大回到面前由代码做）
     pet:   { src: 'assets/dog/pet.png', frames: 43, cols: 8, fps: 12, loop: true }, // ⑤ 被摸头：吐舌头、甩耳朵、摇尾巴（精灵图，手一直摆就一直播）
     shake: { src: 'assets/dog/shake.png', frames: 41, cols: 8, fps: 12 }, // ⑥ 握手：坐着抬爪子再放下（精灵图，播一遍）
     playDead: { src: 'assets/dog/dead.png', frames: 76, cols: 10, fps: 12 }, // ⑦ 装死：吓一跳→倒地→躺一会儿→爬起来坐好（精灵图，播一遍）

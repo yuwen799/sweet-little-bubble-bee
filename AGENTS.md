@@ -149,6 +149,8 @@ node tests/gestures.test.mjs
 
 ## 开发日志（最新的写在最上面）
 
+- **2026-11-08 · Claude**：转圈改成转两圈（14fps，共约 1.7 秒）：精灵图新增 `repeat` 选项（一次动作里连着播几遍，`playSprite` 里按 `n × repeat` 算结束），`config.spin` 加了 `repeat: 2`。只本地提交。
+
 - **2026-11-08 · Claude**：按用户要求转圈加快 2 倍：`config.spin.fps` 7 → 14（一圈约 0.9 秒）。只本地提交。
 
 - **2026-11-08 · Claude**：按用户反馈「跑回来腿不动」重做 `come.png`：16 帧 8fps（2 秒）= 原 GIF 第 5、4 帧（远处）+ 第 3、2、1 帧正面跑步循环 ×4 + 第 0 帧坐好 ×2；`config.come.duration` 改成 2000。`fetchPixel` 里的 `MOUTH` 表按新帧序重排（每个原帧的嘴位置不变）。单独「跑过来」手势也用这段。只本地提交，英文版主页要再同步。

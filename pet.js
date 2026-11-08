@@ -441,15 +441,15 @@ export class Pet {
     const t0 = performance.now();
     this.spriteTimer = setInterval(() => {
       i = Math.floor(((performance.now() - t0) / 1000) * fps);
-      if (i >= n) {
-        if (a.loop) i %= n;
-        else { // 播完停在最后一帧，和视频一样
-          i = n - 1;
-          show();
-          clearInterval(this.spriteTimer);
-          this.onEnd && this.onEnd();
-          return;
-        }
+      const total = n * (a.repeat || 1); // repeat：一次动作里连着播几遍（比如转两圈）
+      if (a.loop) i %= n;
+      else if (i < total) i %= n;
+      else { // 播完停在最后一帧，和视频一样
+        i = n - 1;
+        show();
+        clearInterval(this.spriteTimer);
+        this.onEnd && this.onEnd();
+        return;
       }
       show();
     }, 1000 / fps / 2);

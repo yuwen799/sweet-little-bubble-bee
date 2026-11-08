@@ -23,10 +23,11 @@ export const CONFIG = {
   //             frames = 一共几帧；fps = 每秒播几帧；
   //             帧排成好几行的话，再加 cols: 每行几帧（只有一行就不用写）
   //             精灵图会自动播到最后一帧，不用写 duration。
+  //             想连着播几遍就加 repeat: 2（比如转两圈）。
   //   每个动作的画布大小要一样（比如都是 64×64），背景透明。
   actions: {
     idle:  { src: 'assets/dog/idle.gif', loop: true }, // 待机：坐着吐舌头（6 帧像素 GIF）
-    spin:  { src: 'assets/dog/spin.png', frames: 12, cols: 6, fps: 14 }, // ① 转圈：原地坐着快速转一整圈（约 0.9 秒）（精灵图，播一遍）
+    spin:  { src: 'assets/dog/spin.png', frames: 12, cols: 6, fps: 14, repeat: 2 }, // ① 转圈：原地坐着快速转两圈（约 1.7 秒）（精灵图，播一遍）
     sit:   { src: 'assets/dog/liedown.png', frames: 5, fps: 3.33 }, // ② 趴下：从坐着趴下去（精灵图，播一遍）
     lying: { src: 'assets/dog/lying.png', frames: 8, fps: 3.33, loop: true }, //    趴着不动、摇尾巴（趴下后一直是这个样子）
     leave: { src: 'assets/dog/leave.png', frames: 12, cols: 6, fps: 8, duration: 1500 }, // ③ 走开：一下转身，背对你跑远（精灵图；缩小和往远处移由代码做，duration 和精灵图一样长）

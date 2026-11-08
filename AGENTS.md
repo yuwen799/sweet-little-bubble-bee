@@ -149,6 +149,8 @@ node tests/gestures.test.mjs
 
 ## 开发日志（最新的写在最上面）
 
+- **2026-11-08 · Claude**：亲亲改成「大鼻子贴纸怼到屏幕上」：用户发的贴纸照片（米色纸上），浏览器里按「偏暖的浅色 = 纸」从边缘洪水填充抠掉、只留最大连通块、边缘收 2px 再补 3px 白边、贴边浅灰刷白，存成 `assets/dog/kiss-sticker.png`（492×703）。`stickerPraise` 改成通用的 `stickerShow(kind, src, ms)`（被夸、亲亲共用一个 `#petSticker`，`#petWrap[data-sticker]` 区分样式）。亲亲 2.6 秒：`kissSmash`（冲到镜头前→压扁→回弹→狂抖→后退→再怼一次→biu 回去，贴纸会超出屏幕被裁掉），两次怼上去时 `screenShake()`（`.stage.quake`）+ `flash()` 粉色闪 + `burst(22)` 爱心/唇印/星星往四周炸，外加大爱心和一串上飘的爱心。`config.kiss.sticker` 去掉就用回原来的凑近舔一下。现在 10 个动作都换成自家狗了。只本地提交。
+
 - **2026-11-08 · Claude**：被夸改成「biu 一下变成贴纸」：贴纸图来自主页项目里用户的狗狗照片贴纸（`public/assets/bubble/sticker.png`），去掉外圈米色纸边、加干净的白色刀模边，存成 `assets/dog/sticker.png`（414×642）。`config.praise.sticker` 有值时走 `pet.stickerPraise()`：`#petWrap` 加 `sticker-on`，像素狗 `biuOut` 0.16 秒缩没，`#petSticker` 播 `stickerPop`（弹出放大→回弹→左右抖→再放大→biu 回去，时长 = `praise.duration` 2000ms），冒星星；结束加 `sticker-back` 让像素狗弹回来。去掉 `sticker` 就用回原来的扭一扭。贴纸也在 `preload()` 里预加载。只本地提交。
 
 - **2026-11-08 · Claude**：**用户决定**：个人主页里的 Bubble 二级页面（`sync-bubble.mjs`、第四页 Hover 小卡片）先不用管，等这个项目全部做完再一次性更新；平时不要同步，也不用在总结里提醒「主页要同步」。

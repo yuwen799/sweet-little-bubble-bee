@@ -55,8 +55,14 @@ export class Pet {
    */
   preload() {
     this.sheets = {};
-    const sticker = this.cfg.actions.praise?.sticker;
-    if (sticker) { const img = new Image(); img.src = sticker; img.onerror = () => this.broken.add('sticker'); this.sheets[sticker] = { img, aspect: 0 }; }
+    for (const kind of ['praise', 'kiss']) { // 贴纸图也提前加载
+      const src = this.cfg.actions[kind]?.sticker;
+      if (!src) continue;
+      const img = new Image();
+      img.src = src;
+      img.onerror = () => this.broken.add(`sticker:${kind}`);
+      this.sheets[src] = { img, aspect: 0 };
+    }
     for (const a of Object.values(this.cfg.actions)) {
       if (!a?.src || this.sheets[a.src] || /\.(mp4|webm|mov|m4v|ogv)(\?.*)?$/i.test(a.src)) continue;
       const img = new Image();
@@ -107,8 +113,8 @@ export class Pet {
         return { ok: true };
 
       case 'praise': // 被夸：biu 一下变成贴纸（有 sticker 时），或者开心扭一扭，再回到原来的姿势
-        if (A.praise?.sticker && this.el.sticker && !this.broken.has('sticker')) {
-          this.stickerPraise(A.praise.duration || 2000);
+        if (A.praise?.sticker && this.el.sticker && !this.broken.has('sticker:praise')) {
+          this.stickerShow('praise', A.praise.sticker, A.praise.duration || 2000);
           return { ok: true };
         }
         this.play('praise', A.praise?.duration || 1300, () => this.render(this.restingAnim()));
@@ -120,8 +126,12 @@ export class Pet {
         this.fetch();
         return { ok: true };
 
-      case 'kiss': // 亲亲：凑到屏幕前舔一下，冒大爱心
+      case 'kiss': // 亲亲：大鼻子贴纸怼到屏幕上（有 sticker 时），或者凑到屏幕前舔一下，冒大爱心
         if (far) return this.tooFar();
+        if (A.kiss?.sticker && this.el.sticker && !this.broken.has('sticker:kiss')) {
+          this.stickerShow('kiss', A.kiss.sticker, A.kiss.duration || 2600);
+          return { ok: true };
+        }
         this.play('kiss', A.kiss?.duration || 1600, () => this.render(this.restingAnim()));
         this.bigHeart();
         for (let k = 0; k < 8; k++) setTimeout(() => this.spawnHeart(undefined, true), k * 120);
@@ -310,25 +320,80 @@ export class Pet {
     });
   }
 
-  /** 被夸：狗 biu 地缩没 → 贴纸弹出来、抖一抖、放大 → 再 biu 回像素狗 */
-  stickerPraise(ms) {
-    const { wrap, sticker } = this.el;
+  /**
+   * 贴纸特效：像素狗 biu 地缩没 → 贴纸弹出来 → 再 biu 回像素狗
+   * kind = 'praise'（被夸：弹一弹、抖一抖、放大）| 'kiss'（亲亲：怼到屏幕上狂亲，爱心星星炸开）
+   */
+  stickerShow(kind, src, ms) {
+    const { wrap, sticker, stage } = this.el;
     this.busy = true;
     wrap.classList.remove('sticker-on', 'sticker-back');
+    wrap.dataset.sticker = kind;
+    if (sticker.getAttribute('src') !== src) sticker.setAttribute('src', src);
     sticker.style.setProperty('--sticker-dur', `${ms}ms`);
     sticker.hidden = false;
     void wrap.offsetWidth; // 让动画每次都从头播
     wrap.classList.add('sticker-on');
-    for (let k = 0; k < 6; k++) setTimeout(() => this.spawnHeart(['✨', '⭐', '🌟'], true), 120 + k * 160);
-    clearTimeout(this.stickerTimer);
-    this.stickerTimer = setTimeout(() => {
+    const ids = (this.stickerTimers = []);
+    const at = (t, fn) => ids.push(setTimeout(fn, t));
+    if (kind === 'kiss') {
+      // 两次「怼到屏幕上」：屏幕抖 + 粉色闪一下 + 爱心星星往外炸
+      for (const t of [0.17, 0.66]) {
+        at(ms * t, () => {
+          this.screenShake();
+          this.flash();
+          this.burst(22);
+        });
+      }
+      at(ms * 0.2, () => this.bigHeart());
+      for (let k = 0; k < 14; k++) at(ms * 0.2 + k * 110, () => this.spawnHeart(['❤', '💕', '💗', '💖', '💋'], true));
+    } else {
+      for (let k = 0; k < 6; k++) at(120 + k * 160, () => this.spawnHeart(['✨', '⭐', '🌟'], true));
+    }
+    at(ms, () => {
       sticker.hidden = true;
       wrap.classList.remove('sticker-on');
       wrap.classList.add('sticker-back');
       this.busy = false;
       this.render(this.restingAnim());
-      this.stickerTimer = setTimeout(() => wrap.classList.remove('sticker-back'), 400);
-    }, ms);
+      at(400, () => wrap.classList.remove('sticker-back'));
+    });
+  }
+
+  /** 屏幕抖一下 */
+  screenShake() {
+    const s = this.el.stage;
+    s.classList.remove('quake');
+    void s.offsetWidth;
+    s.classList.add('quake');
+    setTimeout(() => s.classList.remove('quake'), 450);
+  }
+
+  /** 屏幕粉色闪一下 */
+  flash() {
+    const f = document.createElement('div');
+    f.className = 'kiss-flash';
+    this.el.stage.appendChild(f);
+    setTimeout(() => f.remove(), 600);
+  }
+
+  /** 爱心、星星、唇印从中间往四周炸开 */
+  burst(n) {
+    const chars = ['❤', '💕', '💗', '💖', '💘', '💋', '✨', '⭐', '🌟', '✦'];
+    for (let k = 0; k < n; k++) {
+      const p = document.createElement('span');
+      p.className = 'burst';
+      p.textContent = chars[Math.floor(Math.random() * chars.length)];
+      const ang = (k / n) * Math.PI * 2 + Math.random() * 0.5;
+      const dist = 28 + Math.random() * 26; // 单位 cqmin
+      p.style.setProperty('--dx', `${Math.cos(ang) * dist}cqmin`);
+      p.style.setProperty('--dy', `${Math.sin(ang) * dist}cqmin`);
+      p.style.setProperty('--rot', `${(Math.random() - 0.5) * 120}deg`);
+      p.style.setProperty('--sz', `${5 + Math.random() * 6}cqmin`);
+      p.style.animationDelay = `${Math.random() * 80}ms`;
+      this.el.stage.appendChild(p);
+      setTimeout(() => p.remove(), 1300);
+    }
   }
 
   /** 屏幕中间冒出一颗大爱心 */

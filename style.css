@@ -638,6 +638,7 @@ body {
 .deco-tr { right: 0; top: 0; translate: 18% -28%; }
 .deco-bl { left: 0; bottom: 0; translate: -18% 14%; }
 .deco-br { right: 0; bottom: 0; translate: 18% 14%; }
+.deco-in { translate: 0 0; } /* 贴在窗口里面（config 里写 left / top） */
 @keyframes decoFloat {
   from { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); }
   to   { transform: translate(var(--dx), calc(var(--dy) - 6px)) rotate(calc(var(--rot) + 3deg)); }

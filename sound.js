@@ -153,7 +153,7 @@ function schedule() {
 function startMusic() {
   if (!ctx) return;
   musicBus.gain.cancelScheduledValues(ctx.currentTime);
-  musicBus.gain.setTargetAtTime(0.5, ctx.currentTime, 0.2);
+  musicBus.gain.setTargetAtTime(0.25, ctx.currentTime, 0.2); // 背景音乐音量（用户要求比原来小一半）
   if (timer) return;
   nextAt = ctx.currentTime + 0.1;
   timer = setInterval(schedule, 60);

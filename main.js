@@ -15,7 +15,7 @@ const HAND_MODEL =
   'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
 
 const $ = (id) => document.getElementById(id);
-const ACTIONS = ['spin', 'sit', 'leave', 'come', 'pet', 'shake', 'dead', 'praise', 'fetch', 'kiss'];
+const ACTIONS = ['spin', 'sit', 'leave', 'come', 'pet', 'shake', 'dead', 'fetch', 'praise', 'kiss'];
 const KEYS = '1234567890'; // 和 ACTIONS 一一对应
 
 const pet = new Pet(

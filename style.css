@@ -144,6 +144,65 @@ body {
 }
 .pet-wrap.rolled::before { opacity: 1; }
 
+/* ⑦ 握手：坐着抬起右爪，上下晃两下 */
+.st-shake .leg-r { transform-origin: 50% 0%; animation: shakePaw 1.6s ease-in-out 1; }
+.st-shake .head { animation: tilt-sit .4s ease-in-out 4 alternate; }
+.st-shake .tongue { opacity: 1; }
+@keyframes shakePaw {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  20% { transform: translateY(-46px) rotate(-104deg); }
+  35% { transform: translateY(-56px) rotate(-92deg); }
+  50% { transform: translateY(-44px) rotate(-106deg); }
+  65% { transform: translateY(-56px) rotate(-92deg); }
+  82% { transform: translateY(-46px) rotate(-104deg); }
+}
+
+/* ⑧ 装死：「砰」一下往后一仰，侧躺倒地，眼睛变 ×，一动不动 */
+.eyes-x { opacity: 0; }
+.dog.posture-dead { transform: rotate(90deg) translateX(17%); }
+.dog.st-dead { animation: bang .9s cubic-bezier(.4, 1.5, .55, 1) 1; }
+@keyframes bang {
+  0% { transform: rotate(0) translateX(0); }
+  18% { transform: rotate(-12deg) translateY(-5%); }
+  100% { transform: rotate(90deg) translateX(17%); }
+}
+.posture-dead .eyes-open, .posture-dead .eyes-closed { opacity: 0; animation: none; }
+.posture-dead .eyes-x, .posture-dead .tongue { opacity: 1; }
+.posture-dead .shadow { opacity: 0; }
+.posture-dead .tail, .posture-dead .body, .posture-dead .ear { animation: none; }
+.posture-dead .cheek { opacity: 0; }
+/* 装死时被摸：偷偷摇尾巴（演技不过关） */
+.posture-dead.st-pet .tail { animation: wag .18s ease-in-out infinite alternate; }
+.posture-dead.st-pet .head { animation: none; }
+.posture-dead.st-pet .eyes-closed { opacity: 0; }
+
+/* ⑨ 趴下：身子压低、头放低、前爪往两边摊开 */
+.posture-lie .body { transform: translateY(26px) scaleY(.7) scaleX(1.1); animation: none; }
+.posture-lie .haunch { opacity: 1; }
+.posture-lie .head { transform: translateY(46px); }
+.posture-lie .leg-l { transform: translate(-14px, 22px) scaleY(.5) rotate(18deg); }
+.posture-lie .leg-r { transform: translate(14px, 22px) scaleY(.5) rotate(-18deg); }
+.posture-lie .tail { animation-duration: 1.2s; }
+.st-lie .head { animation: lieDown .5s ease-out 1; }
+@keyframes lieDown { 0% { transform: translateY(0); } 70% { transform: translateY(52px); } 100% { transform: translateY(46px); } }
+.posture-lie.st-pet .head { animation-name: tilt-lie; }
+@keyframes tilt-lie { from { transform: translateY(46px) rotate(-7deg); } to { transform: translateY(46px) rotate(7deg); } }
+
+/* ⑩ 被夸：眯眼笑，左右扭屁股，跳一下，冒星星 */
+.dog.st-praise { animation: praise 1.3s ease-in-out 1; }
+.st-praise .eyes-open { opacity: 0; animation: none; }
+.st-praise .eyes-closed, .st-praise .tongue { opacity: 1; }
+.st-praise .cheek { opacity: .85; }
+.st-praise .tail { animation-duration: .12s; }
+@keyframes praise {
+  0%, 100% { transform: rotate(0) translateY(0); }
+  15% { transform: rotate(-8deg); }
+  30% { transform: rotate(8deg); }
+  45% { transform: rotate(-8deg); }
+  60% { transform: rotate(0) translateY(-14%); }
+  75% { transform: rotate(0) translateY(0); }
+}
+
 .hearts { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
 .heart {
   position: absolute; top: 12%;
@@ -180,7 +239,7 @@ body {
 .guide ol { list-style: none; margin: 0; padding: 0; }
 .guide li {
   display: grid; grid-template-columns: 26px 1fr auto 22px; align-items: center; gap: 6px;
-  padding: 7px 6px; border-radius: 10px; cursor: pointer; font-size: 14px;
+  padding: 5px 6px; border-radius: 10px; cursor: pointer; font-size: 14px;
   transition: background .2s, transform .2s;
 }
 .guide li:hover { background: rgba(232, 132, 60, .08); }

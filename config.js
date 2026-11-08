@@ -26,6 +26,10 @@ export const CONFIG = {
     pet:   { src: '', loop: true },                 // ⑤ 被摸头（手一直摆就一直播）
     roll:  { src: '' },                             // ⑥ 翻肚皮（播完停在最后一帧）
     bellyRub: { src: '', loop: true },              //    翻肚皮时被揉肚皮（留空就用 pet）
+    shake: { src: '', duration: 1600 },             // ⑦ 握手（坐着伸爪子，握完继续坐着）
+    playDead: { src: '' },                          // ⑧ 装死（播完停在最后一帧）
+    lie:   { src: '' },                             // ⑨ 趴下（播完停在最后一帧）
+    praise: { src: '', duration: 1300 },            // ⑩ 被夸（开心扭一扭）
   },
 
   // ---------- 走开后的位置 ----------
@@ -55,5 +59,16 @@ export const CONFIG = {
 
     // ⑥ 手掌翻面（手心↔手背）
     flipMs: 900,           // 多长时间内翻完算数（毫秒）
+
+    // ⑦ 手掌上下抖（握手）
+    shakeSwings: 2,        // 至少上下抖几次
+    shakeMinAmplitude: 0.03,
+
+    // ⑧ 比手枪往上甩（装死）
+    bangMinRise: 0.06,     // 往上甩多少（相对画面高度）
+
+    // ⑨⑩ 停住类手势：停多久算数（毫秒）。一直停着只触发一次
+    lieHoldMs: 700,        // 握拳停住 → 趴下
+    praiseHoldMs: 450,     // 竖大拇指停住 → 被夸
   },
 };

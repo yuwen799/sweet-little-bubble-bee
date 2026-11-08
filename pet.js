@@ -6,9 +6,13 @@
 const MEDIA_KEY = {
   idle: 'idle', spin: 'spin', sit: 'sit', walk: 'leave',
   away: 'away', run: 'come', happy: 'come', pet: 'pet', roll: 'roll',
+  shake: 'shake', dead: 'playDead', lie: 'lie', praise: 'praise',
 };
 
-const MOVING = ['spin', 'walk', 'run', 'happy'];
+// 这些动作狗是站着/动着的，不保留坐、趴等姿势
+const MOVING = ['spin', 'walk', 'run', 'happy', 'praise'];
+// 会一直保持的姿势
+const POSTURES = ['sit', 'roll', 'lie', 'dead'];
 
 export class Pet {
   /**
@@ -18,7 +22,7 @@ export class Pet {
   constructor(el, cfg) {
     this.el = el;
     this.cfg = cfg;
-    this.base = 'stand'; // 'stand' | 'sit' | 'roll' | 'away'
+    this.base = 'stand'; // 'stand' | 'sit' | 'roll' | 'lie' | 'dead' | 'away'
     this.busy = false;   // 正在播放一次性的动作（转圈/走开/跑来）
     this.petting = false;
     this.broken = new Set(); // 加载失败的素材
@@ -70,6 +74,30 @@ export class Pet {
         this.render('roll');
         return { ok: true };
 
+      case 'shake': // 握手：坐着抬爪子，握完继续坐着
+        if (far) return this.tooFar();
+        this.play('shake', A.shake?.duration || 1600, () => { this.base = 'sit'; this.render('sit'); });
+        return { ok: true };
+
+      case 'dead': // 装死：倒地不动（保持）
+        if (far) return this.tooFar();
+        if (this.base === 'dead') return { ok: true };
+        this.base = 'dead';
+        this.render('dead');
+        return { ok: true };
+
+      case 'lie': // 趴下（保持）
+        if (far) return this.tooFar();
+        if (this.base === 'lie') return { ok: true };
+        this.base = 'lie';
+        this.render('lie');
+        return { ok: true };
+
+      case 'praise': // 被夸：开心扭一扭，再回到原来的姿势
+        this.play('praise', A.praise?.duration || 1300, () => this.render(this.restingAnim()));
+        for (let k = 0; k < 5; k++) setTimeout(() => this.spawnHeart(['✨', '⭐', '🌟'], true), k * 180);
+        return { ok: true };
+
       case 'leave': {
         if (far) return { ok: false, msg: `${this.name}已经走开啦，手掌往回收叫它回来` };
         const dur = A.leave.duration || 2200;
@@ -115,7 +143,7 @@ export class Pet {
 
   /** 不做动作时该显示的样子 */
   restingAnim() {
-    return { sit: 'sit', roll: 'roll', away: 'away' }[this.base] || 'idle';
+    return { sit: 'sit', roll: 'roll', lie: 'lie', dead: 'dead', away: 'away' }[this.base] || 'idle';
   }
 
   /** 播放一次性动作，结束后调用 done */
@@ -155,11 +183,12 @@ export class Pet {
   render(anim) {
     const { dog, video, img } = this.el;
     let posture = 'stand';
-    if (anim === 'sit' || anim === 'away') posture = 'sit';
-    else if (anim === 'roll') posture = 'roll';
-    else if (!MOVING.includes(anim) && (this.base === 'sit' || this.base === 'roll')) posture = this.base;
+    if (anim === 'sit' || anim === 'away' || anim === 'shake') posture = 'sit';
+    else if (POSTURES.includes(anim)) posture = anim;
+    else if (!MOVING.includes(anim) && POSTURES.includes(this.base)) posture = this.base;
     dog.className = `dog posture-${posture} st-${anim}`;
-    this.el.wrap.classList.toggle('rolled', posture === 'roll');
+    // 翻肚皮/装死时狗是转过来的，影子改由外层画
+    this.el.wrap.classList.toggle('rolled', posture === 'roll' || posture === 'dead');
     // 让 CSS 动画每次都从头播
     void dog.offsetWidth;
 
@@ -193,15 +222,16 @@ export class Pet {
     return 'img';
   }
 
-  spawnHeart() {
+  spawnHeart(chars = ['❤', '💕', '💗'], force = false) {
     const now = performance.now();
-    if (now - this.lastHeart < 220) return;
+    if (!force && now - this.lastHeart < 220) return;
     this.lastHeart = now;
     const h = document.createElement('span');
     h.className = 'heart';
-    h.textContent = ['❤', '💕', '💗'][Math.floor(Math.random() * 3)];
-    h.style.left = `${38 + Math.random() * 24}%`;
-    h.style.top = this.base === 'roll' ? '42%' : '12%'; // 翻肚皮时爱心从肚子冒出来
+    h.textContent = chars[Math.floor(Math.random() * chars.length)];
+    h.style.left = `${30 + Math.random() * 40}%`;
+    // 翻肚皮、趴着、装死时，爱心从身体中间冒出来
+    h.style.top = { roll: '42%', lie: '34%', dead: '40%' }[this.base] || '12%';
     h.style.setProperty('--drift', `${(Math.random() - 0.5) * 60}px`);
     this.el.hearts.appendChild(h);
     setTimeout(() => h.remove(), 1400);

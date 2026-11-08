@@ -9,7 +9,7 @@ const HAND_MODEL =
   'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
 
 const $ = (id) => document.getElementById(id);
-const ACTIONS = ['spin', 'sit', 'leave', 'come', 'pet', 'roll'];
+const ACTIONS = ['spin', 'sit', 'leave', 'come', 'pet', 'roll', 'shake', 'dead', 'lie', 'praise'];
 
 const pet = new Pet(
   { stage: $('stage'), wrap: $('petWrap'), dog: $('dog'), video: $('petVideo'), img: $('petImg'), hearts: $('hearts') },
@@ -46,7 +46,7 @@ function toast(msg) {
 
 // 键盘 1–5 / 点击说明条目（没有摄像头时测试用）
 document.addEventListener('keydown', (e) => {
-  const i = '123456'.indexOf(e.key);
+  const i = '1234567890'.indexOf(e.key);
   if (i >= 0) trigger(ACTIONS[i], { hold: 1600 });
 });
 document.querySelectorAll('.guide li').forEach((li) => {
@@ -91,7 +91,7 @@ async function startCamera() {
     await cam.play();
   } catch (e) {
     const why = e && e.name === 'NotAllowedError' ? '没有摄像头权限' : '摄像头打不开';
-    setStatus(`⚠️ ${why}（可以先用键盘 1–6 试）`);
+    setStatus(`⚠️ ${why}（可以先用键盘 1–9、0 试）`);
     btn.disabled = false;
     return;
   }

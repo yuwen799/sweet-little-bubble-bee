@@ -296,7 +296,7 @@ export class GestureDetector {
     return Math.abs(total) >= this.o.circleTurns * 2 * Math.PI ? 'spin' : null;
   }
 
-  // ② 两指往下滑 → 坐下
+  // ② 两指往下滑 → 趴下（动作名还叫 sit）
   detectSit(t) {
     const run = this.recentRun('two', 700, t);
     if (run.length < 4) return null;

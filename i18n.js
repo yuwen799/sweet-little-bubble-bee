@@ -47,7 +47,7 @@ const EN = {
   // 手势说明：data-action → [怎么比, 狗狗做什么]
   guide: {
     spin: ['Draw a circle with one finger', 'Spin'],
-    sit: ['Two fingers, swipe down', 'Sit'],
+    sit: ['Two fingers, swipe down', 'Lie down'],
     leave: ['Flick a finger sideways', 'Walk off'],
     come: ['Pull your palm back (when far)', 'Come here'],
     pet: ['Wave your palm side to side', 'Head pat'],

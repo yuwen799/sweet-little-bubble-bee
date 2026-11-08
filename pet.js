@@ -5,7 +5,7 @@ import { t } from './i18n.js';
 
 // 显示用的动画名 → config.actions 里的素材名
 const MEDIA_KEY = {
-  idle: 'idle', spin: 'spin', sit: 'sit', walk: 'leave',
+  idle: 'idle', spin: 'spin', sit: 'sit', lying: 'lying', walk: 'leave',
   away: 'away', run: 'come', happy: 'come', pet: 'pet',
   shake: 'shake', dead: 'playDead', praise: 'praise',
   fetch: 'fetch', kiss: 'kiss',
@@ -24,7 +24,7 @@ export class Pet {
   constructor(el, cfg) {
     this.el = el;
     this.cfg = cfg;
-    this.base = 'stand'; // 'stand' | 'sit' | 'away'
+    this.base = 'stand'; // 'stand' | 'sit'（趴着）| 'away'
     this.busy = false;   // 正在播放一次性的动作（转圈/走开/跑来）
     this.petting = false;
     this.broken = new Set(); // 加载失败的素材
@@ -63,15 +63,16 @@ export class Pet {
         this.play('spin', A.spin.duration || 1300, () => { this.base = 'stand'; this.render('idle'); });
         return { ok: true };
 
-      case 'sit':
+      case 'sit': // 趴下（内部名字还叫 sit）：播一遍趴下去，然后一直趴着摇尾巴
         if (far) return this.tooFar();
+        if (this.base === 'sit') { this.render('lying'); return { ok: true }; }
         this.base = 'sit';
-        this.render('sit');
+        this.play('sit', 1500, () => this.render('lying'));
         return { ok: true };
 
-      case 'shake': // 握手：坐着抬爪子，握完继续坐着
+      case 'shake': // 握手：坐着抬爪子，握完继续坐着（待机就是坐着的）
         if (far) return this.tooFar();
-        this.play('shake', A.shake?.duration || 1600, () => { this.base = 'sit'; this.render('sit'); });
+        this.play('shake', A.shake?.duration || 1600, () => { this.base = 'stand'; this.render('idle'); });
         return { ok: true };
 
       case 'dead': // 装死：「砰」倒地，躺 2 秒后自己爬起来（用户要求不要一直躺着）
@@ -190,7 +191,7 @@ export class Pet {
 
   /** 不做动作时该显示的样子 */
   restingAnim() {
-    return { sit: 'sit', away: 'away' }[this.base] || 'idle';
+    return { sit: 'lying', away: 'away' }[this.base] || 'idle';
   }
 
   /** 播放一次性动作，结束后调用 done */
@@ -228,7 +229,7 @@ export class Pet {
   render(anim) {
     const { dog, video, img } = this.el;
     let posture = 'stand';
-    if (anim === 'sit' || anim === 'away' || anim === 'shake') posture = 'sit';
+    if (anim === 'sit' || anim === 'lying' || anim === 'away' || anim === 'shake') posture = 'sit';
     else if (POSTURES.includes(anim)) posture = anim;
     else if (!MOVING.includes(anim) && POSTURES.includes(this.base)) posture = this.base;
     dog.className = `dog posture-${posture} st-${anim}${this.hasBall ? ' has-ball' : ''}`;

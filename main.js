@@ -1,11 +1,12 @@
 import { CONFIG } from './config.js';
 import { Pet } from './pet.js';
 import { GestureDetector } from './gestures.js';
-import { t, poseLabel, applyLanguage } from './i18n.js';
+import { t, poseLabel, applyLanguage, switchLanguage } from './i18n.js';
+import { play, setSfx, setMusic, soundState } from './sound.js';
 import { setupDecor } from './decor.js';
 
 applyLanguage(); // ?lang=en 时把界面换成英文
-setupDecor(CONFIG.decor); // 页面上到处贴的狗狗贴纸
+setupDecor(CONFIG.decor, play); // 页面上到处贴的狗狗贴纸
 
 // MediaPipe 手势识别（从 CDN 加载，需要联网）
 const MP_VERSION = '0.10.14';
@@ -21,6 +22,20 @@ const pet = new Pet(
   { stage: $('stage'), wrap: $('petWrap'), dog: $('dog'), video: $('petVideo'), img: $('petImg'), sprite: $('petSprite'), hearts: $('hearts'), ball: $('ball'), mouth: $('mouthBall'), sticker: $('petSticker') },
   CONFIG,
 );
+pet.sfx = play; // 动作和特效的音效
+
+// ---------- 菜单栏的按钮：音乐 / 音效 / 中英文 ----------
+function paintSoundButtons() {
+  $('musicBtn').textContent = soundState.music ? '♪ ON' : '♪ OFF';
+  $('musicBtn').setAttribute('aria-pressed', String(soundState.music));
+  $('sfxBtn').textContent = soundState.sfx ? '🔊' : '🔇';
+  $('sfxBtn').setAttribute('aria-pressed', String(soundState.sfx));
+}
+$('musicBtn').addEventListener('click', () => { setMusic(!soundState.music); play('click'); paintSoundButtons(); });
+$('sfxBtn').addEventListener('click', () => { setSfx(!soundState.sfx); paintSoundButtons(); });
+$('langBtn').addEventListener('click', () => { play('click'); setTimeout(switchLanguage, 80); });
+paintSoundButtons();
+
 const detector = new GestureDetector(CONFIG.gestures);
 
 // ---------- 触发动作 ----------

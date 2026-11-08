@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,6 +16,9 @@
     <span class="spacer"></span>
     <span id="camStatus" class="mstat">摄像头未开启</span>
     <span id="poseChip" class="mstat">手势：—</span>
+    <button id="musicBtn" class="mbtn" type="button" aria-pressed="false">♪ OFF</button>
+    <button id="sfxBtn" class="mbtn" type="button" aria-pressed="true">🔊</button>
+    <button id="langBtn" class="mbtn" type="button">中文</button>
     <span id="clock" class="clock"></span>
   </header>
 
@@ -153,6 +156,7 @@
     </section>
   </div>
 
+  <footer id="copyright" class="copyright"></footer>
   <div id="toast" class="toast" role="status"></div>
 
   <script type="module" src="main.js"></script>

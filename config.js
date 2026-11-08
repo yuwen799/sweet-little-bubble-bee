@@ -49,16 +49,23 @@ export const CONFIG = {
   cuteFx: true,
 
   // ---------- 页面上的装饰贴纸 ----------
-  // win：贴在哪个窗口（.win-dog 狗狗屏幕 / .win-help 说明 / .win-cam 摄像头）
-  // corner：贴在哪个角（tl 左上 / tr 右上 / bl 左下 / br 右下），一半露在窗口外面
-  // size：高度（像素）；rot：歪多少度；dx / dy：再往外挪多少（像素）
-  // 图片放进 assets/stickers/，还没放的会自动不显示
-  decor: [
-    { src: 'assets/stickers/chef.png',   win: '.win-dog',  corner: 'tr', size: 130, rot: 9, dy: 34 },
-    { src: 'assets/stickers/hoodie.png', win: '.win-dog',  corner: 'br', size: 140, rot: 7 },
-    { src: 'assets/stickers/bow.png',    win: '.win-cam',  corner: 'tr', size: 84,  rot: -7 },
-    { src: 'assets/stickers/dance.png',  win: '.win-cam',  corner: 'bl', size: 150, rot: -10 },
-  ],
+  // 每次打开页面，贴纸会随机分到下面的「位置」里，大小、角度也随机（每张都不一样大）。
+  // stickers：贴纸图片（放在 assets/stickers/，还没放的会自动不显示）
+  // slots：可以贴的位置 = 哪个窗口 + 哪个角（tl 左上 / tr 右上 / bl 左下 / br 右下）。
+  //        这几个角都量过，不会挡住字；位置要比贴纸多，才有得随机。
+  //        size：这个角能放多大的贴纸（长边，像素，在这个范围里随机）；dy：再往下挪多少像素
+  // rot：最多歪多少度
+  decor: {
+    stickers: ['assets/stickers/chef.png', 'assets/stickers/hoodie.png', 'assets/stickers/bow.png', 'assets/stickers/dance.png'],
+    slots: [
+      { win: '.win-dog', corner: 'tr', size: [105, 165], dy: 34 }, // 狗狗窗口右上（躲开菜单栏）
+      { win: '.win-dog', corner: 'br', size: [110, 160], dy: -8 },  // 狗狗窗口右下
+      { win: '.win-cam', corner: 'tr', size: [70, 100], dy: 12 },  // 摄像头窗口右上（太大会挡到说明窗口底下的字）
+      { win: '.win-cam', corner: 'bl', size: [85, 125] },          // 摄像头窗口左下
+      { win: '.win-cam', corner: 'br', size: [75, 110] },          // 摄像头窗口右下（太大会挡「开启摄像头」按钮）
+    ],
+    rot: 16,
+  },
 
   // ---------- 走开后的位置 ----------
   away: {

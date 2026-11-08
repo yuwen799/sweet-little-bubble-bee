@@ -29,6 +29,7 @@ export class Pet {
     this.petting = false;
     this.broken = new Set(); // 加载失败的素材
     this.lastHeart = 0;
+    this.sfx = () => {}; // main.js 会换成真正的音效
 
     el.stage.style.setProperty('--away-scale', cfg.away.scale);
     el.stage.style.setProperty('--away-y', cfg.away.offsetY);
@@ -271,6 +272,7 @@ export class Pet {
 
     if (this.cfg.cuteFx !== false) {
       this.pop('!', 50, -2, { cls: 'bang', size: 12 });
+      this.sfx('throw');
       at(900, () => this.stagePuff(endX, endY)); // 球落地扬起一点灰
       for (let t = 0; t < goMs - 200; t += 300) at(t, () => this.puff(t % 600 ? 66 : 34, 93, t % 600 ? 1 : -1));
     }
@@ -291,6 +293,7 @@ export class Pet {
       mouth.style.top = `${(fy / 224) * 100}%`;
     };
     at(goMs, () => {
+      this.sfx('pop'); // 叼起来
       ball.getAnimations().forEach((a) => a.cancel());
       ball.className = 'ball';
       this.onFrame = (key, i) => { if (key === 'come') place(i); };
@@ -341,6 +344,8 @@ export class Pet {
   stickerShow(kind, src, ms) {
     const { wrap, sticker, stage } = this.el;
     this.busy = true;
+    this.sfx('biu');
+    setTimeout(() => this.sfx(kind === 'kiss' ? 'spring' : 'fanfare'), 120);
     wrap.classList.remove('sticker-on', 'sticker-back');
     wrap.dataset.sticker = kind;
     if (sticker.getAttribute('src') !== src) sticker.setAttribute('src', src);
@@ -354,6 +359,7 @@ export class Pet {
     if (kind === 'kiss') {
       // 两次「怼到屏幕上」：屏幕抖 + 粉色闪 + 光圈 + 漫画字 + 爱心星星唇印往外炸；中间狂抖时贴纸重影
       const smash = (word) => {
+        this.sfx('smooch');
         this.screenShake();
         this.flash();
         this.rings('#ff4f8b', 3);
@@ -367,7 +373,8 @@ export class Pet {
       at(ms * 0.66, () => { smash('SMOOCH!'); this.heartRain(26, ms * 0.34); wrap.classList.add('glitch'); });
       at(ms * 0.84, () => wrap.classList.remove('glitch'));
       for (let k = 0; k < 24; k++) at(ms * 0.2 + k * 120, () => this.spawnHeart(['❤', '💕', '💗', '💖', '💋'], true));
-      at(ms * 0.93, () => this.shatter(src, 12)); // 最后碎成一堆小贴纸飞走
+      at(ms * 0.93, () => this.shatter(src, 12));
+      at(ms * 0.66, () => this.sfx('rain')); // 最后碎成一堆小贴纸飞走
     } else {
       // 被夸：「GOOD DOG!」印章砸下来 + 彩纸炸开；最后猛放大时再来一轮
       at(ms * 0.08, () => {
@@ -386,6 +393,7 @@ export class Pet {
       });
     }
     at(ms, () => {
+      this.sfx('biuBack');
       sticker.hidden = true;
       wrap.classList.remove('sticker-on');
       wrap.classList.add('sticker-back');
@@ -418,6 +426,7 @@ export class Pet {
 
   /** 漫画字砸到屏幕上（MWAH! / GOOD DOG!） */
   word(text, kind) {
+    this.sfx('slam');
     const w = document.createElement('div');
     w.className = `fx-word fx-word-${kind}`;
     w.textContent = text;
@@ -429,6 +438,7 @@ export class Pet {
 
   /** 彩纸：蓝、黄、粉、白的小方块往四周炸开再往下掉 */
   confetti(n) {
+    this.sfx('confetti');
     const colors = ['#2261e9', '#f2c94c', '#ff4f8b', '#fbfbf8', '#132f8f'];
     for (let k = 0; k < n; k++) {
       const c = document.createElement('span');
@@ -464,6 +474,7 @@ export class Pet {
 
   /** 贴纸碎成一堆小贴纸往外飞 */
   shatter(src, n) {
+    this.sfx('shatter');
     for (let k = 0; k < n; k++) {
       const s = document.createElement('img');
       s.className = 'fx-mini';
@@ -497,12 +508,14 @@ export class Pet {
     switch (kind) {
       case 'spin': {
         const d = this.spriteMs('spin', 1300);
+        this.sfx('whirl');
         feet(0);
         for (let k = 0; k < 5; k++) at(150 + k * (d / 6), () => pop('✦', 18 + Math.random() * 64, 15 + Math.random() * 45, { cls: 'twinkle' }));
         at(d - 100, () => this.orbit(50, 6, 1300)); // 转晕了
         break;
       }
       case 'sit':
+        this.sfx('liedown');
         at(380, () => { this.puff(24, 92, -1); this.puff(76, 92, 1); });
         at(500, () => pop('♡', 72, 30, { cls: 'pink' }));
         at(800, () => pop('♪', 26, 34, { cls: 'note' }));
@@ -538,6 +551,9 @@ export class Pet {
 
   /** 狗身边冒一个小符号/小字，往上飘 */
   pop(txt, x, y, { cls = '', size = 8, delay = 0 } = {}) {
+    const snd = cls.includes('bangword') ? 'gunshot' : cls.includes('word') ? 'tag' : cls.includes('bang') ? 'alert'
+      : cls.includes('twinkle') ? 'twinkle' : cls.includes('pink') ? 'heart' : cls.includes('note') ? 'note' : 'pop';
+    setTimeout(() => this.sfx(snd), delay);
     const p = document.createElement('span');
     p.className = `fx-pop ${cls}`;
     p.textContent = txt;
@@ -551,6 +567,7 @@ export class Pet {
 
   /** 脚边一小团灰尘，往 dir（-1 左 / 1 右）飘 */
   puff(x, y, dir = 1) {
+    this.sfx(this.curAnim === 'walk' || this.curAnim === 'run' ? 'step' : 'puff');
     const p = document.createElement('span');
     p.className = 'fx-puff';
     p.style.left = `${x}%`;
@@ -562,6 +579,7 @@ export class Pet {
 
   /** 舞台上某个像素位置冒一团灰（或一个符号），扔球落地用 */
   stagePuff(x, y, txt) {
+    this.sfx(txt ? 'twinkle' : 'bounce');
     const p = document.createElement('span');
     p.className = txt ? 'fx-pop twinkle' : 'fx-puff';
     if (txt) { p.textContent = txt; p.style.setProperty('--sz', '7cqmin'); }
@@ -574,6 +592,7 @@ export class Pet {
 
   /** 头顶转圈的小金星（晕乎乎） */
   orbit(x, y, ms) {
+    this.sfx('dizzy');
     const o = document.createElement('div');
     o.className = 'fx-orbit';
     o.style.left = `${x}%`;
@@ -591,6 +610,7 @@ export class Pet {
 
   /** 屏幕抖一下 */
   screenShake() {
+    this.sfx('thump');
     const s = this.el.stage;
     s.classList.remove('quake');
     void s.offsetWidth;
@@ -608,6 +628,7 @@ export class Pet {
 
   /** 爱心、星星、唇印从中间往四周炸开 */
   burst(n, chars = ['❤', '💕', '💗', '💖', '💘', '💋', '✨', '⭐', '🌟', '✦']) {
+    this.sfx('sparkle');
     for (let k = 0; k < n; k++) {
       const p = document.createElement('span');
       p.className = 'burst';

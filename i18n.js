@@ -1,6 +1,22 @@
-// 界面文字的中英文。默认中文；网址后面加 ?lang=en 就显示英文（用户个人主页里嵌入时用英文）。
+// 界面文字的中英文。默认英文；菜单栏的「中文 / EN」按钮可以切换，选过的会记在这台电脑上。
+// 网址后面加 ?lang=zh 或 ?lang=en 可以直接指定（优先级最高，个人主页嵌入时用 ?lang=en）。
 // 加新文字时：ZH 和 EN 两边都要加同一个 key。
-export const LANG = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'zh';
+function pickLang() {
+  const q = new URLSearchParams(location.search).get('lang');
+  if (q === 'en' || q === 'zh') return q;
+  try { const s = localStorage.getItem('bubble-lang'); if (s === 'en' || s === 'zh') return s; } catch { /* 存不了就用默认 */ }
+  return 'en';
+}
+export const LANG = pickLang();
+
+/** 切换语言：记下来，换掉网址里的 ?lang=，重新载入页面 */
+export function switchLanguage() {
+  const next = LANG === 'en' ? 'zh' : 'en';
+  try { localStorage.setItem('bubble-lang', next); } catch { /* 无痕模式就只改网址 */ }
+  const url = new URL(location.href);
+  url.searchParams.set('lang', next);
+  location.replace(url);
+}
 
 const ZH = {
   petName: null, // null = 用 config.js 里的 petName
@@ -17,6 +33,11 @@ const ZH = {
   alreadyAway: '{name}已经走开啦，手掌往回收叫它回来',
   tooFar: '{name}离得太远了，先把手掌往回收，叫它跑过来',
   pose: { point: '☝️ 单指', gun: '👉 手枪', two: '✌️ 两指', open: '🖐 张开手掌', fist: '✊ 握拳', thumb: '👍 大拇指', pinch: '🤏 捏住', other: '🤚 其他' },
+  langBtn: 'EN',
+  langTitle: 'Switch to English',
+  musicTitle: '背景音乐 开 / 关',
+  sfxTitle: '音效 开 / 关',
+  copyright: '© {year} Yuwen Su · 狗狗 Bubble 的形象、画面与代码 · 保留所有权利',
 };
 
 const EN = {
@@ -34,6 +55,11 @@ const EN = {
   alreadyAway: '{name} already wandered off. Pull your palm back to call {name} over.',
   tooFar: '{name} is too far away. Pull your palm back first so {name} runs over.',
   pose: { point: '☝️ One finger', gun: '👉 Finger gun', two: '✌️ Two fingers', open: '🖐 Open palm', fist: '✊ Fist', thumb: '👍 Thumbs-up', pinch: '🤏 Pinch', other: '🤚 Other' },
+  langBtn: '中文',
+  langTitle: '切换到中文',
+  musicTitle: 'Music on / off',
+  sfxTitle: 'Sound effects on / off',
+  copyright: '© {year} Yuwen Su · Bubble, artwork & code · All rights reserved',
   // 页面上写死的文字（index.html），英文模式下替换
   static: {
     camStatus: 'Camera off',
@@ -73,7 +99,13 @@ export const poseLabel = (pose) => (TEXT.pose[pose] || ZH.pose[pose] || pose);
 
 // 英文模式：把 index.html 里写死的中文换成英文
 export function applyLanguage() {
-  if (LANG !== 'en') return;
+  const set0 = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+  set0('langBtn', t('langBtn'));
+  document.getElementById('langBtn')?.setAttribute('title', t('langTitle'));
+  document.getElementById('musicBtn')?.setAttribute('title', t('musicTitle'));
+  document.getElementById('sfxBtn')?.setAttribute('title', t('sfxTitle'));
+  set0('copyright', t('copyright', { year: new Date().getFullYear() }));
+  if (LANG !== 'en') { document.documentElement.lang = 'zh-CN'; return; }
   const s = EN.static;
   document.documentElement.lang = 'en';
   const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };

@@ -1,0 +1,16 @@
+Copyright (c) 2026 Yuwen Su. All rights reserved.
+
+Sweet Little Bubble Bee — including its code, the pixel-art animations, the
+photo stickers, the character "Bubble" and the page design — is the original
+work of Yuwen Su. The source is public so people can look at it, but no licence
+is granted to copy, modify, redistribute or use it commercially without written
+permission.
+
+Third-party parts keep their own licences:
+- MediaPipe Tasks Vision (loaded from a CDN at runtime) — Apache License 2.0,
+  © Google LLC.
+- Silkscreen font (loaded from Google Fonts) — SIL Open Font License 1.1,
+  © Jason Kottke.
+
+版权所有 © 2026 Yuwen Su。代码、像素动画、照片贴纸、狗狗 Bubble 的形象和页面设计都是原创作品。
+源码公开只供查看，未经书面许可不得复制、修改、转载或商用。第三方部分按各自的许可协议使用。

@@ -607,6 +607,22 @@ body {
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 /* ---------- 窄屏 / 手机：窗口竖着排，可以上下滚 ---------- */
+/* ---------- 菜单栏小按钮（音乐 / 音效 / 中英文） ---------- */
+.mbtn {
+  font: 11px/1 var(--pixel); letter-spacing: 1px; color: var(--cream);
+  background: transparent; border: 1.5px solid currentColor; padding: 3px 7px;
+  cursor: pointer; white-space: nowrap;
+}
+.mbtn:hover { background: var(--cream); color: var(--ink); }
+.mbtn[aria-pressed="true"]#musicBtn { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
+.mbtn:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+
+/* ---------- 版权（页面最底下一行小字） ---------- */
+.copyright {
+  position: fixed; left: 22px; bottom: 6px; z-index: 5;
+  font: 11px/1.2 var(--sans); color: rgba(11, 11, 12, .55); pointer-events: none;
+}
+
 /* ---------- 页面装饰贴纸（decor.js） ---------- */
 .win { position: relative; }
 .deco {
@@ -663,6 +679,10 @@ body {
 
 @media (max-width: 760px) {
   body { overflow: auto; }
+  html, body { overflow-x: clip; } /* 随机歪得比较多的贴纸露出右边时，不要让整页能左右滑 */
+  .copyright { position: static; display: block; padding: 4px 16px 20px; text-align: center; }
+  .mbtn { padding: 3px 5px; font-size: 10px; }
+  .menubar { gap: 10px; }
   .deco { height: calc(var(--h) * .6); }
   .menubar .menu, .menubar #poseChip { display: none; }
   .desktop {

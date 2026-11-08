@@ -23,7 +23,7 @@ const DEFAULTS = {
   circleTurns: 0.8,
   circleMinRadius: 0.03,
   sitMinDrop: 0.11,
-  pushRatio: 1.28,
+  swipeMinDist: 0.18, // 走开：食指往旁边划多远
   pullRatio: 0.78,
   petSwings: 2,
   petMinAmplitude: 0.035,
@@ -138,8 +138,8 @@ export class GestureDetector {
 
     if (t < this.cooldownUntil) return { pose, gesture: null };
 
-    const g = this.detectCircle(t) || this.detectBang(t) || this.detectSit(t) || this.detectFlip(t) ||
-      this.detectPushPull(t) || this.detectShake(t) || this.detectPet(t) ||
+    const g = this.detectCircle(t) || this.detectBang(t) || this.detectSwipe(t) || this.detectSit(t) ||
+      this.detectFlip(t) || this.detectPull(t) || this.detectShake(t) || this.detectPet(t) ||
       this.detectHold(t, 'fist', this.o.lieHoldMs, 'lie') ||
       this.detectHold(t, 'thumb', this.o.praiseHoldMs, 'praise');
     if (g) {
@@ -227,16 +227,32 @@ export class GestureDetector {
     return null;
   }
 
-  // ③ 手掌推出去 → 走开；④ 手掌收回来 → 跑过来
-  detectPushPull(t) {
+  // ③ 食指往旁边快速一划（「去那边」）→ 走开
+  //   以前是「手掌往屏幕推」，但摆手、翻手时手会靠近摄像头变大，老被误认（用户真机反馈），所以换掉了
+  detectSwipe(t) {
+    const run = this.recentRun(['point', 'gun'], 450, t);
+    if (run.length < 5) return null;
+    const a = run[0].tip;
+    const b = run[run.length - 1].tip;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    let path = 0;
+    for (let k = 1; k < run.length; k++) path += dist2d(run[k].tip, run[k - 1].tip);
+    const straight = Math.abs(dx) / (path || 1); // 走直线 ≈ 1，画弧线明显小于 1
+    return Math.abs(dx) >= this.o.swipeMinDist && Math.abs(dy) <= Math.abs(dx) * 0.4 && straight >= 0.8
+      ? 'leave' : null;
+  }
+
+  // ④ 手掌往回收（手在画面里变小）→ 跑过来
+  //   main.js 只在狗走远时才用这个手势，平时忽略，减少误触发
+  detectPull(t) {
     const run = this.recentRun('open', 700, t);
     if (run.length < 4 || flipped(run)) return null;
-    const base = Math.min(...run.slice(0, 3).map((s) => s.size));
+    // 手掌位置基本不动（左右摆、上下抖时手会大幅移动，不算）
+    if (range(run.map((s) => s.palm.x)) > 0.12 || range(run.map((s) => s.palm.y)) > 0.12) return null;
     const baseMax = Math.max(...run.slice(0, 3).map((s) => s.size));
     const now = run[run.length - 1].size;
-    if (now / base >= this.o.pushRatio) return 'leave';
-    if (now / baseMax <= this.o.pullRatio) return 'come';
-    return null;
+    return now / baseMax <= this.o.pullRatio ? 'come' : null;
   }
 
   /** 张开手掌来回摆的公共判断：axis='x' 左右摆，'y' 上下抖 */

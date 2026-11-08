@@ -126,6 +126,8 @@ function loop() {
   const out = detector.update(lm, now);
   drawHand(lm, out.pose);
   $('poseChip').textContent = `手势：${out.pose ? POSE_LABEL[out.pose] : '没看到手'}`;
+  // 「手掌往回收」只用来把走远的狗叫回来；狗在面前时忽略，免得误触发
+  if (out.gesture === 'come' && pet.base !== 'away') return;
   if (out.gesture) trigger(out.gesture);
 }
 

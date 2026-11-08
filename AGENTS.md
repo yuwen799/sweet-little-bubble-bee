@@ -149,6 +149,8 @@ node tests/gestures.test.mjs
 
 ## 开发日志（最新的写在最上面）
 
+- **2026-11-08 · Claude**：按用户要求把亲亲（比心）做得更夸张抽象、被夸也更夸张。`pet.js` 新增特效积木：`rays(kind)` 狗背后转的放射光（`.fx-rays`，z-index 1 在狗后面）、`rings(color,n)` 扩散光圈、`word(text,kind)` 像素漫画字砸下来、`confetti(n)` 蓝黄粉彩纸、`heartRain(n,ms)` 爱心雨、`shatter(src,n)` 贴纸碎成小贴纸飞走；`burst()` 可以传自定义字符。亲亲 3 秒：粉色放射光全程；两次怼屏各配「MWAH!」「SMOOCH!」+ 光圈 + 震屏 + 粉闪 + 26 个爆炸粒子，第二次开始下爱心雨；两段狂抖期间 `#petWrap.glitch`（粉/蓝两道重影 + 抖动）；最后碎成 12 张小贴纸。被夸 2.4 秒：金色放射光 + 贴纸金色光晕；开头「GOOD DOG!」印章 + 震屏 + 36 片彩纸 + 金光圈；`stickerPop` 弹得更大（1.55 倍、抖得更猛、最后蓄力放大 1.5 倍）时再来一轮彩纸、光圈、星星。两种特效结束后都会把临时元素清干净。只本地提交。
+
 - **2026-11-08 · Claude**：亲亲改成「大鼻子贴纸怼到屏幕上」：用户发的贴纸照片（米色纸上），浏览器里按「偏暖的浅色 = 纸」从边缘洪水填充抠掉、只留最大连通块、边缘收 2px 再补 3px 白边、贴边浅灰刷白，存成 `assets/dog/kiss-sticker.png`（492×703）。`stickerPraise` 改成通用的 `stickerShow(kind, src, ms)`（被夸、亲亲共用一个 `#petSticker`，`#petWrap[data-sticker]` 区分样式）。亲亲 2.6 秒：`kissSmash`（冲到镜头前→压扁→回弹→狂抖→后退→再怼一次→biu 回去，贴纸会超出屏幕被裁掉），两次怼上去时 `screenShake()`（`.stage.quake`）+ `flash()` 粉色闪 + `burst(22)` 爱心/唇印/星星往四周炸，外加大爱心和一串上飘的爱心。`config.kiss.sticker` 去掉就用回原来的凑近舔一下。现在 10 个动作都换成自家狗了。只本地提交。
 
 - **2026-11-08 · Claude**：被夸改成「biu 一下变成贴纸」：贴纸图来自主页项目里用户的狗狗照片贴纸（`public/assets/bubble/sticker.png`），去掉外圈米色纸边、加干净的白色刀模边，存成 `assets/dog/sticker.png`（414×642）。`config.praise.sticker` 有值时走 `pet.stickerPraise()`：`#petWrap` 加 `sticker-on`，像素狗 `biuOut` 0.16 秒缩没，`#petSticker` 播 `stickerPop`（弹出放大→回弹→左右抖→再放大→biu 回去，时长 = `praise.duration` 2000ms），冒星星；结束加 `sticker-back` 让像素狗弹回来。去掉 `sticker` 就用回原来的扭一扭。贴纸也在 `preload()` 里预加载。只本地提交。

@@ -336,19 +336,38 @@ export class Pet {
     wrap.classList.add('sticker-on');
     const ids = (this.stickerTimers = []);
     const at = (t, fn) => ids.push(setTimeout(fn, t));
+    this.rays(kind, ms);
     if (kind === 'kiss') {
-      // 两次「怼到屏幕上」：屏幕抖 + 粉色闪一下 + 爱心星星往外炸
-      for (const t of [0.17, 0.66]) {
-        at(ms * t, () => {
-          this.screenShake();
-          this.flash();
-          this.burst(22);
-        });
-      }
+      // 两次「怼到屏幕上」：屏幕抖 + 粉色闪 + 光圈 + 漫画字 + 爱心星星唇印往外炸；中间狂抖时贴纸重影
+      const smash = (word) => {
+        this.screenShake();
+        this.flash();
+        this.rings('#ff4f8b', 3);
+        this.word(word, 'kiss');
+        this.burst(26);
+      };
+      at(ms * 0.17, () => { smash('MWAH!'); wrap.classList.add('glitch'); });
       at(ms * 0.2, () => this.bigHeart());
-      for (let k = 0; k < 14; k++) at(ms * 0.2 + k * 110, () => this.spawnHeart(['❤', '💕', '💗', '💖', '💋'], true));
+      at(ms * 0.56, () => wrap.classList.remove('glitch'));
+      at(ms * 0.66, () => { smash('SMOOCH!'); this.heartRain(26, ms * 0.34); wrap.classList.add('glitch'); });
+      at(ms * 0.84, () => wrap.classList.remove('glitch'));
+      for (let k = 0; k < 16; k++) at(ms * 0.2 + k * 100, () => this.spawnHeart(['❤', '💕', '💗', '💖', '💋'], true));
+      at(ms * 0.93, () => this.shatter(src, 12)); // 最后碎成一堆小贴纸飞走
     } else {
-      for (let k = 0; k < 6; k++) at(120 + k * 160, () => this.spawnHeart(['✨', '⭐', '🌟'], true));
+      // 被夸：「GOOD DOG!」印章砸下来 + 彩纸炸开；最后猛放大时再来一轮
+      at(ms * 0.08, () => {
+        this.screenShake();
+        this.word('GOOD DOG!', 'praise');
+        this.confetti(36);
+        this.rings('#f2c94c', 2);
+      });
+      for (let k = 0; k < 8; k++) at(150 + k * 140, () => this.spawnHeart(['✨', '⭐', '🌟'], true));
+      at(ms * 0.8, () => {
+        this.screenShake();
+        this.confetti(30);
+        this.rings('#f2c94c', 3);
+        this.burst(14, ['⭐', '🌟', '✨', '✦', '★']);
+      });
     }
     at(ms, () => {
       sticker.hidden = true;
@@ -358,6 +377,90 @@ export class Pet {
       this.render(this.restingAnim());
       at(400, () => wrap.classList.remove('sticker-back'));
     });
+  }
+
+  /** 背后转圈的放射光（漫画那种），整段特效期间一直在 */
+  rays(kind, ms) {
+    const r = document.createElement('div');
+    r.className = `fx-rays fx-rays-${kind}`;
+    r.style.setProperty('--dur', `${ms}ms`);
+    this.el.stage.appendChild(r);
+    setTimeout(() => r.remove(), ms + 50);
+  }
+
+  /** 从中间一圈圈扩散出去的光圈 */
+  rings(color, n) {
+    for (let k = 0; k < n; k++) {
+      const r = document.createElement('div');
+      r.className = 'fx-ring';
+      r.style.setProperty('--c', color);
+      r.style.animationDelay = `${k * 110}ms`;
+      this.el.stage.appendChild(r);
+      setTimeout(() => r.remove(), 900 + k * 110);
+    }
+  }
+
+  /** 漫画字砸到屏幕上（MWAH! / GOOD DOG!） */
+  word(text, kind) {
+    const w = document.createElement('div');
+    w.className = `fx-word fx-word-${kind}`;
+    w.textContent = text;
+    w.style.setProperty('--tilt', `${(Math.random() - 0.5) * 24}deg`);
+    w.style.setProperty('--x', `${30 + Math.random() * 40}%`);
+    this.el.stage.appendChild(w);
+    setTimeout(() => w.remove(), 1000);
+  }
+
+  /** 彩纸：蓝、黄、粉、白的小方块往四周炸开再往下掉 */
+  confetti(n) {
+    const colors = ['#2261e9', '#f2c94c', '#ff4f8b', '#fbfbf8', '#132f8f'];
+    for (let k = 0; k < n; k++) {
+      const c = document.createElement('span');
+      c.className = 'fx-confetti';
+      const ang = Math.random() * Math.PI * 2;
+      const dist = 25 + Math.random() * 35;
+      c.style.setProperty('--dx', `${Math.cos(ang) * dist}cqmin`);
+      c.style.setProperty('--dy', `${Math.sin(ang) * dist - 10}cqmin`);
+      c.style.setProperty('--rot', `${(Math.random() - 0.5) * 720}deg`);
+      c.style.background = colors[k % colors.length];
+      c.style.animationDelay = `${Math.random() * 60}ms`;
+      this.el.stage.appendChild(c);
+      setTimeout(() => c.remove(), 1500);
+    }
+  }
+
+  /** 从屏幕顶上下爱心雨 */
+  heartRain(n, ms) {
+    const chars = ['❤', '💕', '💗', '💖', '💘'];
+    for (let k = 0; k < n; k++) {
+      setTimeout(() => {
+        const h = document.createElement('span');
+        h.className = 'fx-rain';
+        h.textContent = chars[k % chars.length];
+        h.style.left = `${Math.random() * 100}%`;
+        h.style.setProperty('--sz', `${4 + Math.random() * 6}cqmin`);
+        h.style.setProperty('--rot', `${(Math.random() - 0.5) * 80}deg`);
+        this.el.stage.appendChild(h);
+        setTimeout(() => h.remove(), 1200);
+      }, Math.random() * ms * 0.8);
+    }
+  }
+
+  /** 贴纸碎成一堆小贴纸往外飞 */
+  shatter(src, n) {
+    for (let k = 0; k < n; k++) {
+      const s = document.createElement('img');
+      s.className = 'fx-mini';
+      s.src = src;
+      s.alt = '';
+      const ang = (k / n) * Math.PI * 2 + Math.random() * 0.4;
+      const dist = 38 + Math.random() * 20;
+      s.style.setProperty('--dx', `${Math.cos(ang) * dist}cqmin`);
+      s.style.setProperty('--dy', `${Math.sin(ang) * dist}cqmin`);
+      s.style.setProperty('--rot', `${(Math.random() - 0.5) * 540}deg`);
+      this.el.stage.appendChild(s);
+      setTimeout(() => s.remove(), 900);
+    }
   }
 
   /** 屏幕抖一下 */
@@ -378,8 +481,7 @@ export class Pet {
   }
 
   /** 爱心、星星、唇印从中间往四周炸开 */
-  burst(n) {
-    const chars = ['❤', '💕', '💗', '💖', '💘', '💋', '✨', '⭐', '🌟', '✦'];
+  burst(n, chars = ['❤', '💕', '💗', '💖', '💘', '💋', '✨', '⭐', '🌟', '✦']) {
     for (let k = 0; k < n; k++) {
       const p = document.createElement('span');
       p.className = 'burst';

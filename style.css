@@ -286,24 +286,37 @@ body {
 .pet-sticker[hidden] { display: none; }
 .sticker-on .pet-sticker { animation: stickerPop var(--sticker-dur, 2s) cubic-bezier(.3, .7, .4, 1) forwards; }
 .pet-wrap[data-sticker="kiss"] .pet-sticker { height: 86%; bottom: 6%; transform-origin: 50% 55%; }
+.pet-wrap[data-sticker="praise"].sticker-on .pet-sticker {
+  filter: drop-shadow(0 0 0 #f2c94c) drop-shadow(0 0 2.5cqmin rgba(242, 201, 76, .9)) drop-shadow(0 5px 0 rgba(11, 11, 12, .22));
+}
+/* 亲亲狂抖时：粉、蓝两道重影（像信号错位） */
+.pet-wrap.glitch .pet-sticker {
+  filter: drop-shadow(2.2cqmin 0 0 rgba(255, 79, 139, .85)) drop-shadow(-2.2cqmin 0 0 rgba(34, 97, 233, .8));
+  animation-play-state: running;
+}
+.pet-wrap.glitch { animation: glitchJitter .12s steps(2) infinite; }
+@keyframes glitchJitter { 0% { translate: .8cqmin -.5cqmin; } 50% { translate: -.8cqmin .6cqmin; } 100% { translate: 0 0; } }
 .pet-wrap.sticker-on[data-sticker="kiss"] .pet-sticker { animation: kissSmash var(--sticker-dur, 2.6s) linear forwards; }
 .sticker-on .pet-media, .sticker-on .dog { animation: biuOut .16s ease-in forwards; }
 .sticker-back .pet-media, .sticker-back .dog { animation: biuIn .32s cubic-bezier(.3, 1.6, .5, 1) both; }
 @keyframes stickerPop {
   0%   { transform: translateX(-50%) scale(0) rotate(-18deg); }
-  9%   { transform: translateX(-50%) scale(1.28) rotate(7deg); }
-  16%  { transform: translateX(-50%) scale(.9) rotate(-6deg); }
-  23%  { transform: translateX(-50%) scale(1.1) rotate(4deg); }
-  30%  { transform: translateX(-50%) scale(.98) rotate(-3deg); }
-  37%  { transform: translateX(-50%) scale(1.03) rotate(-4deg); }
-  /* 停一下，左右抖两下 */
-  48%  { transform: translateX(-50%) scale(1.03) rotate(3deg); }
-  56%  { transform: translateX(-50%) scale(1.03) rotate(-4deg); }
-  64%  { transform: translateX(-50%) scale(1.03) rotate(3deg); }
-  72%  { transform: translateX(-50%) scale(1.03) rotate(-2deg); }
-  /* 再猛地放大一下，然后 biu 回去 */
-  82%  { transform: translateX(-50%) scale(1.18) rotate(0deg); }
-  88%  { transform: translateX(-50%) scale(1.12) rotate(-2deg); }
+  8%   { transform: translateX(-50%) scale(1.55) rotate(10deg); }
+  14%  { transform: translateX(-50%) scale(.82) rotate(-9deg); }
+  20%  { transform: translateX(-50%) scale(1.22) rotate(6deg); }
+  26%  { transform: translateX(-50%) scale(.95) rotate(-4deg); }
+  32%  { transform: translateX(-50%) scale(1.08) rotate(-5deg); }
+  /* 左右猛抖 */
+  40%  { transform: translateX(-50%) scale(1.08) rotate(8deg); }
+  47%  { transform: translateX(-50%) scale(1.1) rotate(-8deg); }
+  54%  { transform: translateX(-50%) scale(1.08) rotate(7deg); }
+  61%  { transform: translateX(-50%) scale(1.1) rotate(-6deg); }
+  68%  { transform: translateX(-50%) scale(1.05) rotate(3deg); }
+  74%  { transform: translateX(-50%) scale(.92) rotate(0deg); }
+  /* 蓄力后猛地放大，然后 biu 回去 */
+  80%  { transform: translateX(-50%) scale(1.5) rotate(-4deg); }
+  86%  { transform: translateX(-50%) scale(1.35) rotate(3deg); }
+  90%  { transform: translateX(-50%) scale(1.42) rotate(0deg); }
   100% { transform: translateX(-50%) scale(0) rotate(20deg); }
 }
 /* ⑩ 亲亲 · 大鼻子贴纸：冲到镜头前 → 怼扁在屏幕上 → 狂抖 → 再怼一次 → biu 回去 */
@@ -329,6 +342,83 @@ body {
   100% { transform: translateX(-50%) scale(0) rotate(35deg); }
 }
 .stage.quake { animation: quake .42s linear; }
+
+/* ---------- 特效积木（被夸 / 亲亲用） ---------- */
+/* 放射光：在狗后面转 */
+.fx-rays {
+  position: absolute; left: 50%; top: 55%; z-index: 1; pointer-events: none;
+  width: 260cqmax; aspect-ratio: 1; border-radius: 50%;
+  animation: raysIn var(--dur, 2s) linear forwards;
+}
+.fx-rays-praise { background: repeating-conic-gradient(from 0deg, rgba(242, 201, 76, .55) 0 8deg, rgba(242, 201, 76, 0) 8deg 20deg); }
+.fx-rays-kiss { background: repeating-conic-gradient(from 0deg, rgba(255, 79, 139, .45) 0 6deg, rgba(255, 180, 210, .12) 6deg 15deg); }
+@keyframes raysIn {
+  0%   { transform: translate(-50%, -50%) scale(0) rotate(0); opacity: 0; }
+  10%  { transform: translate(-50%, -50%) scale(1) rotate(25deg); opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(.6) rotate(200deg); opacity: 0; }
+}
+/* 光圈 */
+.fx-ring {
+  position: absolute; left: 50%; top: 52%; z-index: 4; pointer-events: none;
+  width: 20cqmin; aspect-ratio: 1; border-radius: 50%;
+  border: 1.6cqmin solid var(--c); opacity: 0;
+  animation: ring .8s ease-out forwards;
+}
+@keyframes ring {
+  0%   { transform: translate(-50%, -50%) scale(.2); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(6); opacity: 0; border-width: .3cqmin; }
+}
+/* 漫画字 */
+.fx-word {
+  position: absolute; left: var(--x, 50%); top: 22%; z-index: 6; pointer-events: none;
+  font: 13cqmin/1 var(--pixel); white-space: nowrap; letter-spacing: .05em;
+  -webkit-text-stroke: .9cqmin var(--ink); paint-order: stroke fill;
+  text-shadow: 1.2cqmin 1.2cqmin 0 var(--ink);
+  animation: slam .95s cubic-bezier(.2, 1.6, .4, 1) forwards;
+}
+.fx-word-kiss { color: #ff7fb2; }
+.fx-word-praise { color: var(--yellow); font-size: 12cqmin; left: 50%; top: 14%; }
+@keyframes slam {
+  0%   { transform: translate(-50%, -50%) scale(3.2) rotate(var(--tilt)); opacity: 0; }
+  18%  { transform: translate(-50%, -50%) scale(.9) rotate(var(--tilt)); opacity: 1; }
+  30%  { transform: translate(-50%, -50%) scale(1.06) rotate(var(--tilt)); }
+  75%  { transform: translate(-50%, -50%) scale(1) rotate(var(--tilt)); opacity: 1; }
+  100% { transform: translate(-50%, -70%) scale(1.1) rotate(var(--tilt)); opacity: 0; }
+}
+/* 彩纸 */
+.fx-confetti {
+  position: absolute; left: 50%; top: 50%; z-index: 5; pointer-events: none;
+  width: 2.2cqmin; height: 1.3cqmin;
+  animation: confetti 1.4s cubic-bezier(.15, .8, .4, 1) forwards;
+}
+@keyframes confetti {
+  0%   { transform: translate(-50%, -50%) rotate(0) scale(.4); opacity: 1; }
+  60%  { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)) scale(1); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) + 30cqmin)) rotate(calc(var(--rot) * 1.6)) scale(1); opacity: 0; }
+}
+/* 爱心雨 */
+.fx-rain {
+  position: absolute; top: -10%; z-index: 5; pointer-events: none;
+  font-size: var(--sz, 6cqmin); line-height: 1;
+  animation: rain 1.15s cubic-bezier(.5, 0, .8, .6) forwards;
+}
+@keyframes rain {
+  from { transform: translateY(0) rotate(0); opacity: 1; }
+  to   { transform: translateY(125cqh) rotate(var(--rot)); opacity: .9; }
+}
+/* 碎成小贴纸 */
+.fx-mini {
+  position: absolute; left: 50%; top: 50%; z-index: 5; pointer-events: none;
+  height: 16cqmin; width: auto;
+  filter: drop-shadow(0 .6cqmin 0 rgba(11, 11, 12, .25));
+  animation: mini .85s cubic-bezier(.15, .8, .3, 1) forwards;
+}
+@keyframes mini {
+  0%   { transform: translate(-50%, -50%) scale(1.6) rotate(0); opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.7) rotate(var(--rot)); opacity: 0; }
+}
 @keyframes quake {
   0%, 100% { transform: none; }
   15% { transform: translate(-2.2%, 1.4%) rotate(-1deg); }

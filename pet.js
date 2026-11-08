@@ -266,7 +266,9 @@ export class Pet {
     const a = this.cfg.actions[key] || {};
     const isVideo = /\.(mp4|webm|mov|m4v|ogv)(\?.*)?$/i.test(src);
     dog.hidden = true;
-    if (a.frames > 1) { // 像素精灵图（pixie.haus 导出的 spritesheet）
+    // 素材自己会画倒地，不用卡通狗那个外层影子
+    if (!motion) wrap.classList.remove('lying');
+    if (a.frames > 1) { // 像素精灵图（PixelLab 导出或视频转出来的 spritesheet）
       video.hidden = true;
       video.pause();
       img.hidden = true;
@@ -332,18 +334,22 @@ export class Pet {
       el.style.backgroundPosition = `${cols > 1 ? (c / (cols - 1)) * 100 : 0}% ${rows > 1 ? (r / (rows - 1)) * 100 : 0}%`;
     };
     show();
+    // 按真实经过的时间算第几帧：电脑卡一下或计时器变慢，动画也不会被拖长
+    const t0 = performance.now();
     this.spriteTimer = setInterval(() => {
-      i++;
+      i = Math.floor(((performance.now() - t0) / 1000) * fps);
       if (i >= n) {
-        if (a.loop) i = 0;
+        if (a.loop) i %= n;
         else { // 播完停在最后一帧，和视频一样
+          i = n - 1;
+          show();
           clearInterval(this.spriteTimer);
           this.onEnd && this.onEnd();
           return;
         }
       }
       show();
-    }, 1000 / fps);
+    }, 1000 / fps / 2);
   }
 
   spawnHeart(chars = ['❤', '💕', '💗'], force = false) {

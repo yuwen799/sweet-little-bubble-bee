@@ -32,8 +32,8 @@ export const CONFIG = {
     away:  { src: '' },                             //    走远后待着的样子（留空就用 idle）
     come:  { src: '', duration: 1100 },             // ④ 跑过来（同时会自动放大回到面前）
     pet:   { src: 'assets/dog/pet.png', frames: 43, cols: 8, fps: 12, loop: true }, // ⑤ 被摸头：吐舌头、甩耳朵、摇尾巴（精灵图，手一直摆就一直播）
-    shake: { src: '', duration: 1600 },             // ⑥ 握手（坐着伸爪子，握完继续坐着）
-    playDead: { src: '', duration: 2000 },          // ⑦ 装死（躺 2 秒后自己爬起来；视频就播到结尾）
+    shake: { src: 'assets/dog/shake.png', frames: 41, cols: 8, fps: 12 }, // ⑥ 握手：坐着抬爪子再放下（精灵图，播一遍）
+    playDead: { src: 'assets/dog/dead.png', frames: 76, cols: 10, fps: 12 }, // ⑦ 装死：吓一跳→倒地→躺一会儿→爬起来坐好（精灵图，播一遍）
     praise: { src: '', duration: 1300 },            // ⑧ 被夸（开心扭一扭）
     fetch: { src: '', duration: 4000 },             // ⑨ 扔球叼回来（一整段：追球→叼回来；留空就用卡通狗演）
     kiss:  { src: '', duration: 1600 },             // ⑩ 亲亲（凑到镜头前舔一下）

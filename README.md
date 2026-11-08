@@ -62,6 +62,15 @@ actions: {
 }
 ```
 
+   **用 pixie.haus 生成的像素动画**：导出 GIF，或者导出精灵图（spritesheet）再写上一共几帧：
+
+```js
+spin: { src: 'assets/dog/spin.png', frames: 8, fps: 10 },
+idle: { src: 'assets/dog/idle.gif', loop: true },
+```
+
+   每个动作的画布大小要一样，背景透明。
+
 3. 刷新网页就行。没填的动作会继续用卡通狗，所以可以一个一个慢慢换。
 
 素材建议：
@@ -82,6 +91,6 @@ actions: {
 | `gestures.js` | 手势识别逻辑 |
 | `pet.js` | 狗狗的状态和动画切换 |
 | `main.js` | 摄像头、模型加载、界面 |
-| `style.css` | 样式和卡通狗动画 |
+| `style.css` | Bubble OS 界面样式和卡通狗动画 |
 | `tests/` | 手势识别测试：`node tests/gestures.test.mjs` |
 | `AGENTS.md` | 给接手开发的 AI 看的交接文档（进度、设计决定、下一步） |

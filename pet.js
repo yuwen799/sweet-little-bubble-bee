@@ -17,7 +17,7 @@ const POSTURES = ['sit', 'dead']; // dead 只在装死那 2 秒里用
 
 export class Pet {
   /**
-   * @param el  { stage, wrap, dog, video, img, hearts, ball }
+   * @param el  { stage, wrap, dog, video, img, sprite, hearts, ball }
    * @param cfg CONFIG
    */
   constructor(el, cfg) {
@@ -172,7 +172,7 @@ export class Pet {
     const h = document.createElement('div');
     h.className = 'big-heart';
     h.textContent = '💗';
-    document.body.appendChild(h);
+    this.el.stage.appendChild(h);
     setTimeout(() => h.remove(), 1500);
   }
 
@@ -206,7 +206,7 @@ export class Pet {
     this.onEnd = finish;
     const mode = this.render(anim);
     // 视频：等播完（'ended'），最多等 15 秒；其他：按时长
-    this.armTimer(mode === 'video' ? 15000 : ms);
+    this.armTimer(mode === 'video' || mode === 'sprite' ? 15000 : ms);
   }
 
   armTimer(ms) {
@@ -240,16 +240,29 @@ export class Pet {
     this.curAnim = anim;
     this.curKey = key;
 
+    const { sprite } = this.el;
+    clearInterval(this.spriteTimer);
+
     if (!src) {
       dog.hidden = false;
       video.hidden = true;
       img.hidden = true;
+      sprite.hidden = true;
       video.pause();
       return 'svg';
     }
 
+    const a = this.cfg.actions[key] || {};
     const isVideo = /\.(mp4|webm|mov|m4v|ogv)(\?.*)?$/i.test(src);
     dog.hidden = true;
+    if (a.frames > 1) { // 像素精灵图（pixie.haus 导出的 spritesheet）
+      video.hidden = true;
+      video.pause();
+      img.hidden = true;
+      this.playSprite(key, src, a);
+      return 'sprite';
+    }
+    sprite.hidden = true;
     if (isVideo) {
       img.hidden = true;
       if (video.getAttribute('src') !== src) video.setAttribute('src', src);
@@ -261,9 +274,59 @@ export class Pet {
     }
     video.hidden = true;
     video.pause();
-    if (img.getAttribute('src') !== src) img.setAttribute('src', src);
+    // GIF：每次都从第一帧开始播（同一个地址浏览器不会重播，所以加个尾巴）
+    const fresh = /\.gif(\?.*)?$/i.test(src) && !a.loop;
+    if (fresh || img.dataset.src !== src) {
+      img.dataset.src = src;
+      img.setAttribute('src', fresh ? `${src}${src.includes('?') ? '&' : '?'}t=${Date.now()}` : src);
+    }
     img.hidden = false;
     return 'img';
+  }
+
+  /** 播放精灵图：一张大图里排着每一帧，从左到右、从上到下 */
+  playSprite(key, src, a) {
+    const el = this.el.sprite;
+    const n = a.frames;
+    const cols = a.cols || n;
+    const rows = Math.ceil(n / cols);
+    const fps = a.fps || 10;
+    if (el.dataset.src !== src) {
+      el.dataset.src = src;
+      el.style.backgroundImage = `url("${src}")`;
+      // 检查图片能不能加载，加载失败就退回卡通狗
+      const probe = new Image();
+      probe.onerror = () => {
+        if (el.dataset.src !== src) return;
+        console.warn(`素材加载失败，改用卡通狗：${src}`);
+        el.dataset.src = '';
+        this.broken.add(key);
+        this.render(this.curAnim);
+        if (this.onEnd && this.busy) this.armTimer(this.curDur);
+      };
+      probe.src = src;
+    }
+    el.style.backgroundSize = `${cols * 100}% ${rows * 100}%`;
+    el.hidden = false;
+    let i = 0;
+    const show = () => {
+      const c = i % cols;
+      const r = Math.floor(i / cols);
+      el.style.backgroundPosition = `${cols > 1 ? (c / (cols - 1)) * 100 : 0}% ${rows > 1 ? (r / (rows - 1)) * 100 : 0}%`;
+    };
+    show();
+    this.spriteTimer = setInterval(() => {
+      i++;
+      if (i >= n) {
+        if (a.loop) i = 0;
+        else { // 播完停在最后一帧，和视频一样
+          clearInterval(this.spriteTimer);
+          this.onEnd && this.onEnd();
+          return;
+        }
+      }
+      show();
+    }, 1000 / fps);
   }
 
   spawnHeart(chars = ['❤', '💕', '💗'], force = false) {

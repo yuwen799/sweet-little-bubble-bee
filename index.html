@@ -4,12 +4,30 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sweet Little Bubble Bee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main id="stage" class="stage">
-    <div class="wall"></div>
-    <div class="floor"></div>
+  <header class="menubar">
+    <span class="logo">◆ BUBBLE OS</span>
+    <span class="menu">FILE</span><span class="menu">DOG</span><span class="menu">HELP</span>
+    <span class="spacer"></span>
+    <span id="camStatus" class="mstat">摄像头未开启</span>
+    <span id="poseChip" class="mstat">手势：—</span>
+    <span id="clock" class="clock"></span>
+  </header>
+
+  <div class="desktop">
+    <section class="win win-dog">
+      <div class="titlebar"><span>DOG.EXE</span></div>
+      <div class="win-body">
+        <div class="bezel">
+          <div class="screen">
+            <div class="hud">♥♥♥ BUBBLE</div>
+            <main id="stage" class="stage">
+              <div class="floor"></div>
 
     <div id="petWrap" class="pet-wrap">
       <div id="hearts" class="hearts"></div>
@@ -88,6 +106,7 @@
 
       <video id="petVideo" class="pet-media" playsinline muted hidden></video>
       <img id="petImg" class="pet-media" alt="" hidden>
+      <div id="petSprite" class="pet-media pet-sprite" hidden></div>
     </div>
 
     <!-- 扔出去的网球 -->
@@ -98,15 +117,15 @@
       </svg>
     </div>
   </main>
+          </div>
+          <div id="statusBar" class="statusbar">▶ 对着摄像头比个手势吧</div>
+        </div>
+      </div>
+    </section>
 
-  <header class="topbar">
-    <div class="brand">🐶 Sweet Little Bubble Bee</div>
-    <div id="camStatus" class="chip">摄像头未开启</div>
-    <div id="poseChip" class="chip">手势：—</div>
-  </header>
-
-  <aside class="guide" aria-label="手势说明">
-    <h2>怎么玩</h2>
+    <section class="win win-help guide" aria-label="手势说明">
+      <div class="titlebar"><span>HELP.TXT</span></div>
+      <div class="win-body">
     <ol>
       <li data-action="spin"><span class="ico">☝️</span><span class="how">食指画个圈</span><span class="what">转圈</span><kbd>1</kbd></li>
       <li data-action="sit"><span class="ico">✌️</span><span class="how">两指往下滑</span><span class="what">坐下</span><kbd>2</kbd></li>
@@ -119,13 +138,18 @@
       <li data-action="fetch"><span class="ico">🤏</span><span class="how">捏住，松手往外甩</span><span class="what">扔球</span><kbd>9</kbd></li>
       <li data-action="kiss"><span class="ico">🫶</span><span class="how">双手比心</span><span class="what">亲亲</span><kbd>0</kbd></li>
     </ol>
-    <p class="hint">没有摄像头？点条目或按键盘 1–9、0 也能试。</p>
-  </aside>
+        <p class="hint">没有摄像头？点条目或按键盘 1–9、0 也能试。</p>
+      </div>
+    </section>
 
-  <div id="camBox" class="cam off">
-    <video id="cam" playsinline muted></video>
-    <canvas id="overlay"></canvas>
-    <button id="camBtn" type="button">📷 开启摄像头</button>
+    <section class="win win-cam">
+      <div class="titlebar"><span>CAM.EXE</span></div>
+      <div id="camBox" class="cam off">
+        <video id="cam" playsinline muted></video>
+        <canvas id="overlay"></canvas>
+        <button id="camBtn" type="button">开启摄像头</button>
+      </div>
+    </section>
   </div>
 
   <div id="toast" class="toast" role="status"></div>

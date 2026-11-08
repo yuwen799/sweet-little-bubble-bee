@@ -49,7 +49,7 @@ node tests/gestures.test.mjs
 | `gestures.js` | 纯逻辑，不碰 DOM。`classifyPose()` 判断手型；`GestureDetector.update(landmarks, t)` 返回 `{pose, gesture}` |
 | `pet.js` | 狗的状态机加渲染。`pet.do(action)` 返回 `{ok, msg}` |
 | `main.js` | 摄像头、MediaPipe、画手部骨架、键盘和点击触发、toast |
-| `style.css` | 场景、界面、**内置卡通狗的全部动画**（由 `.dog` 上的 `posture-*` / `st-*` class 驱动） |
+| `style.css` | Bubble OS 桌面界面、**内置卡通狗的全部动画**（由 `.dog` 上的 `posture-*` / `st-*` class 驱动） |
 | `index.html` | 内联 SVG 卡通狗，加上界面结构 |
 
 ## 关键设计决定（别随手推翻）
@@ -88,6 +88,13 @@ node tests/gestures.test.mjs
    - 视频播完会触发 `ended`，然后进入下一个状态。不循环的视频播完停在最后一帧（坐下就是靠这个保持姿势）。
    - 走开、跑过来的缩放和位移由外层 `.pet-wrap` 的 CSS transform 完成，所以真狗视频只要原地走或跑就行。
 8. 狗的素材**不从网上下载**（版权问题、来源不稳定），用自己画的 SVG 卡通柴犬占位，等用户换成自家狗的视频。
+9. **视觉：Bubble OS**（用户 2026-11-08 选定，是「复古电脑桌面」和「像素掌机」的结合，要和用户个人主页 `~/Documents/claud/yuwen-portfolio` 搭配）。
+   - 只用主页三色：电光蓝 `#2261e9`、奶白 `#fbfbf8`、墨黑 `#0b0b0c`，背景是蓝色细网格。狗是画面里唯一的彩色。英文用 Google Fonts 的 Silkscreen 像素字体，中文用系统字体。
+   - 顶部黑色菜单栏（BUBBLE OS、摄像头状态、手势、时钟）；三个窗口：`DOG.EXE`（蓝色粗边框掌机屏幕，左上「♥♥♥ BUBBLE」，底部状态栏显示刚触发的手势 → 动作）、`HELP.TXT`（手势说明，触发时那一行变蓝）、`CAM.EXE`（摄像头）。粗黑边加硬阴影，无圆角。
+   - 用户明确说：**不做等级 / 经验条，窗口不能拖动、不能关闭**。
+   - 舞台在窗口里面，用 `container-type: size`，舞台内的尺寸都用 `cqh` / `cqw`，不要用 `vh`。
+   - 窄屏（≤760px）窗口竖着排，页面可以滚动。
+10. **狗的素材用 pixie.haus 生成的像素动画**（用户 2026-11-08 决定）。支持 GIF，也支持精灵图：`{ src, frames, fps, cols? }`，由 `pet.playSprite()` 逐帧播放，不循环的播完停在最后一帧，并触发结束（和视频的 `ended` 一样）。素材都用 `image-rendering: pixelated`。不循环的 GIF 每次加 `?t=` 让它从头播。
 
 ## 当前进度
 
@@ -141,6 +148,7 @@ node tests/gestures.test.mjs
 
 ## 开发日志（最新的写在最上面）
 
+- **2026-11-08 · Claude**：整站换成 Bubble OS 视觉（复古电脑桌面 + 像素掌机屏幕，配色跟用户主页一致）；新增状态栏、菜单栏时钟；新增精灵图播放（给 pixie.haus 像素狗用）。手势逻辑没动，测试 70 项通过。只本地提交。用户正在用 pixie.haus 生成狗。
 - **2026-11-07 · Claude**：双手比枪模式（两手都比枪时暂停所有单手手势）；修画圈把直线来回甩算成转圈的 bug；触发后的冷却逻辑抽成 `fire()`。测试 70 项全部通过。只本地提交。
 - **2026-11-07 · Claude**：修双手比枪误触发被夸：被夸要求另一只手不在比枪/竖拇指；双手装死也接受 `thumb` 手型。测试 65 项全部通过。只本地提交。
 - **2026-11-07 · Claude**：按用户反馈：双手装死要先停稳再快速上甩；装死改成一次性动作，躺 2 秒后爬起来（删掉了「装死时被摸偷偷摇尾巴」）。测试 59 项全部通过。只本地提交。

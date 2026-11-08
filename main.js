@@ -13,7 +13,7 @@ const ACTIONS = ['spin', 'sit', 'leave', 'come', 'pet', 'shake', 'dead', 'praise
 const KEYS = '1234567890'; // 和 ACTIONS 一一对应
 
 const pet = new Pet(
-  { stage: $('stage'), wrap: $('petWrap'), dog: $('dog'), video: $('petVideo'), img: $('petImg'), hearts: $('hearts'), ball: $('ball') },
+  { stage: $('stage'), wrap: $('petWrap'), dog: $('dog'), video: $('petVideo'), img: $('petImg'), sprite: $('petSprite'), hearts: $('hearts'), ball: $('ball') },
   CONFIG,
 );
 const detector = new GestureDetector(CONFIG.gestures);
@@ -22,8 +22,30 @@ const detector = new GestureDetector(CONFIG.gestures);
 function trigger(action, opts) {
   const r = pet.do(action, opts);
   flash(action, r.ok);
+  if (r.ok) status(action);
   if (!r.ok && r.msg) toast(r.msg);
 }
+
+// 狗狗屏幕底下的状态栏：「▶ 竖大拇指停住 → 被夸」
+function status(action) {
+  const li = document.querySelector(`.guide li[data-action="${action}"]`);
+  if (!li) return;
+  const bar = $('statusBar');
+  const text = `▶ ${li.querySelector('.how').textContent} → ${li.querySelector('.what').textContent}`;
+  if (bar.textContent === text && action === 'pet') return; // 一直摸头时不要一直抖
+  bar.textContent = text;
+  bar.classList.remove('bump');
+  void bar.offsetWidth;
+  bar.classList.add('bump');
+}
+
+// 菜单栏右上角的时钟
+function tick() {
+  const d = new Date();
+  $('clock').textContent = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+tick();
+setInterval(tick, 10000);
 
 function flash(action, ok) {
   const li = document.querySelector(`.guide li[data-action="${action}"]`);
@@ -92,7 +114,7 @@ async function startCamera() {
     await cam.play();
   } catch (e) {
     const why = e && e.name === 'NotAllowedError' ? '没有摄像头权限' : '摄像头打不开';
-    setStatus(`⚠️ ${why}（可以先用键盘 1–9、0 试）`);
+    setStatus(`⚠ ${why}（可以先用键盘 1–9、0 试）`);
     btn.disabled = false;
     return;
   }
@@ -157,20 +179,17 @@ function drawHands(hands, main, pose) {
 function drawHand(lm, pose, isMain) {
   const w = overlay.width;
   const h = overlay.height;
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = isMain ? 'rgba(255, 220, 170, .9)' : 'rgba(255, 255, 255, .6)';
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = isMain ? '#2261e9' : 'rgba(251, 251, 248, .5)';
   ctx.beginPath();
   for (const [a, b] of BONES) {
     ctx.moveTo(lm[a].x * w, lm[a].y * h);
     ctx.lineTo(lm[b].x * w, lm[b].y * h);
   }
   ctx.stroke();
-  ctx.fillStyle = pose === 'other' ? '#ffffff' : '#e8843c';
-  for (const p of lm) {
-    ctx.beginPath();
-    ctx.arc(p.x * w, p.y * h, 4, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  // 关节点画成小方块，像素风
+  ctx.fillStyle = pose === 'other' ? '#fbfbf8' : '#f2c94c';
+  for (const p of lm) ctx.fillRect(p.x * w - 4, p.y * h - 4, 8, 8);
 }
 
 $('camBtn').addEventListener('click', startCamera);

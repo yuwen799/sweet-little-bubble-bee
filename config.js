@@ -16,6 +16,14 @@ export const CONFIG = {
   //
   // loop:     是否循环播放（待机、摸头这种持续的动作要 true）
   // duration: 动作时长（毫秒）。视频会自动播到结尾，gif/图片和内置卡通狗按这个时长。
+  //
+  // ★ pixie.haus 导出的像素动画，两种都行：
+  //   GIF：     spin: { src: 'assets/dog/spin.gif', duration: 1200 }
+  //   精灵图：  spin: { src: 'assets/dog/spin.png', frames: 8, fps: 10 }
+  //             frames = 一共几帧；fps = 每秒播几帧；
+  //             帧排成好几行的话，再加 cols: 每行几帧（只有一行就不用写）
+  //             精灵图会自动播到最后一帧，不用写 duration。
+  //   每个动作的画布大小要一样（比如都是 64×64），背景透明。
   actions: {
     idle:  { src: '', loop: true },                 // 待机：站着摇尾巴
     spin:  { src: '', duration: 1300 },             // ① 转圈

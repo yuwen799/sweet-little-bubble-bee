@@ -163,23 +163,35 @@ export class GestureDetector {
     if (t < this.freshUntil) this.hist = this.hist.slice(-1);
     if (t < this.cooldownUntil) return { pose, gesture: null };
 
+    // 双手比枪模式：最近 0.8 秒里两只手都在比枪（含被看成单指/竖拇指），就只认装死和比心，
+    // 单手手势全部暂停。摄像头偶尔会丢掉另一只手几帧，用 0.8 秒的窗口兜住（用户真机反馈：装死时误认成画圈、被夸）
+    const twoGuns = this.hist.some((s) => s.t >= t - 800 && BANG_POSES.includes(s.pose) && BANG_POSES.includes(s.oPose));
+    if (twoGuns) {
+      const g2 = heart || this.detectBang(t);
+      if (g2) this.fire(g2, t, pose);
+      return { pose, gesture: g2 };
+    }
+
     const g = heart || this.detectBang(t) || this.detectThrow(t) || this.detectCircle(t) ||
       this.detectSwipe(t) || this.detectSit(t) || this.detectPull(t) || this.detectShake(t) ||
       this.detectPet(t) ||
       this.detectHold(t, 'fist', this.o.shakeHoldMs, 'shake') ||
       this.detectHold(t, 'thumb', this.o.praiseHoldMs, 'praise', true);
-    if (g) {
-      if (g === 'pet') {
-        this.cooldownUntil = t + this.o.petRepeat;
-      } else {
-        this.cooldownUntil = t + this.o.cooldown;
-        this.freshUntil = this.cooldownUntil;
-        this.hist = [];
-      }
-      // 晃完拳头握手后还握着拳，不要接着再触发一次「握拳停住 = 握手」
-      if (g === 'shake') this.holdLock = pose;
-    }
+    if (g) this.fire(g, t, pose);
     return { pose, gesture: g };
+  }
+
+  /** 触发动作后：进入冷却，清掉历史 */
+  fire(g, t, pose) {
+    if (g === 'pet') {
+      this.cooldownUntil = t + this.o.petRepeat;
+      return;
+    }
+    this.cooldownUntil = t + this.o.cooldown;
+    this.freshUntil = this.cooldownUntil;
+    this.hist = [];
+    // 晃完拳头握手后还握着拳，不要接着再触发一次「握拳停住 = 握手」
+    if (g === 'shake') this.holdLock = pose;
   }
 
   /** 从最新往回取一段同手型的连续样本（允许偶尔 2 帧识别抖动）。pose 可以是数组 */
@@ -262,18 +274,25 @@ export class GestureDetector {
     if (run.length < 10 || run[run.length - 1].t - run[0].t < 350) return null;
     const cx = run.reduce((s, p) => s + p.tip.x, 0) / run.length;
     const cy = run.reduce((s, p) => s + p.tip.y, 0) / run.length;
-    const r = run.reduce((s, p) => s + Math.hypot(p.tip.x - cx, p.tip.y - cy), 0) / run.length;
+    const radii = run.map((p) => Math.hypot(p.tip.x - cx, p.tip.y - cy));
+    const r = radii.reduce((s, v) => s + v, 0) / run.length;
     if (r < this.o.circleMinRadius) return null;
+    // 真的在画圈：手指一直绕着中心走，很少经过中心附近。
+    // 直上直下来回甩（比如装死的上甩再落下）会穿过中心，角度一下跳半圈，以前会被误算成转圈
+    if (radii.filter((v) => v < r * 0.4).length > run.length * 0.15) return null;
     let total = 0;
+    let jumps = 0;
     let prev = Math.atan2(run[0].tip.y - cy, run[0].tip.x - cx);
     for (let k = 1; k < run.length; k++) {
       const a = Math.atan2(run[k].tip.y - cy, run[k].tip.x - cx);
       let d = a - prev;
       if (d > Math.PI) d -= 2 * Math.PI;
       if (d < -Math.PI) d += 2 * Math.PI;
-      total += d;
+      if (Math.abs(d) > Math.PI / 2) jumps++; // 一帧转了超过 1/4 圈 = 穿过中心，不是在画圈
+      else total += d;
       prev = a;
     }
+    if (jumps > 1) return null;
     return Math.abs(total) >= this.o.circleTurns * 2 * Math.PI ? 'spin' : null;
   }
 

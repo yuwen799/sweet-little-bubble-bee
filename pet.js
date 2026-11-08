@@ -44,7 +44,31 @@ export class Pet {
     el.video.addEventListener('error', onErr(el.video));
     el.img.addEventListener('error', onErr(el.img));
 
+    this.preload();
     this.render('idle');
+  }
+
+  /**
+   * 打开网页时就把所有动画图加载、解码好。
+   * 不然第一次播某个动作时图还没到，狗会空白一下（趴下连着换两张图，最明显）。
+   * 精灵图顺便记下每一帧的宽高比，切换时直接用，不用等加载。
+   */
+  preload() {
+    this.sheets = {};
+    for (const a of Object.values(this.cfg.actions)) {
+      if (!a?.src || this.sheets[a.src] || /\.(mp4|webm|mov|m4v|ogv)(\?.*)?$/i.test(a.src)) continue;
+      const img = new Image();
+      const entry = { img, aspect: 0 };
+      this.sheets[a.src] = entry; // 留着引用，解码好的图不会被浏览器丢掉
+      img.src = a.src;
+      img.decode().then(() => {
+        if (a.frames > 1) {
+          const cols = a.cols || a.frames;
+          const rows = Math.ceil(a.frames / cols);
+          entry.aspect = (img.naturalWidth / cols) / (img.naturalHeight / rows);
+        }
+      }).catch(() => {});
+    }
   }
 
   get name() { return t('petName') || this.cfg.petName; }
@@ -406,15 +430,17 @@ export class Pet {
     const cols = a.cols || n;
     const rows = Math.ceil(n / cols);
     const fps = a.fps || 10;
+    // 每一帧不一定是正方形：按帧的宽高比设宽度，不然会被拉扁。
+    // 预加载时已经算好就直接用；切换时不把宽度清空（清空会有一瞬间被拉宽，看起来像闪一下）
+    const known = this.sheets?.[src]?.aspect;
+    if (known) el.style.width = `${known * 100}%`;
     if (el.dataset.src !== src) {
       el.dataset.src = src;
       el.style.backgroundImage = `url("${src}")`;
       // 检查图片能不能加载，加载失败就退回卡通狗
       const probe = new Image();
-      // 每一帧不一定是正方形：按帧的宽高比设宽度，不然会被拉扁
-      el.style.width = '';
       probe.onload = () => {
-        if (el.dataset.src !== src) return;
+        if (el.dataset.src !== src || known) return;
         el.style.width = `${((probe.naturalWidth / cols) / (probe.naturalHeight / rows)) * 100}%`;
       };
       probe.onerror = () => {

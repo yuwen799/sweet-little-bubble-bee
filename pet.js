@@ -142,13 +142,23 @@ export class Pet {
         return { ok: true };
       }
 
-      case 'pet':
+      case 'pet': {
         if (far) return this.tooFar();
+        const P = A.pet || {};
+        // 有像素精灵图：摸一下就完整播（config 里 repeat 几遍），播完回到原来的姿势
+        if (P.frames > 1 && !P.loop && this.srcFor('pet').src) {
+          this.play('pet', 4000, () => this.render(this.restingAnim()));
+          const ms = (P.frames * (P.repeat || 1) * 1000) / (P.fps || 10);
+          for (let t = 0; t < ms - 300; t += 450) setTimeout(() => this.spawnHeart(undefined, true), t);
+          return { ok: true };
+        }
+        // 卡通狗 / 循环素材：手一直摆就一直摸
         if (!this.petting) { this.petting = true; this.render('pet'); }
         clearTimeout(this.petTimer);
         this.petTimer = setTimeout(() => this.stopPetting(true), opts.hold || 900);
         this.spawnHeart();
         return { ok: true };
+      }
     }
     return { ok: false };
   }

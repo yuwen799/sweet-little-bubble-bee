@@ -33,8 +33,8 @@ export const CONFIG = {
     leave: { src: 'assets/dog/leave.png', frames: 12, cols: 6, fps: 8, duration: 1500 }, // ③ 走开：一下转身，背对你跑远（精灵图；缩小和往远处移由代码做，duration 和精灵图一样长）
     away:  { src: '' },                             //    走远后待着的样子（留空就用 idle）
     come:  { src: 'assets/dog/come.png', frames: 16, cols: 8, fps: 8, duration: 2000 }, // ④ 跑过来：从远处一路跑回来（正面跑步循环）再坐好（精灵图；放大回到面前由代码做）
-    pet:   { src: 'assets/dog/pet.png', frames: 43, cols: 8, fps: 12, loop: true }, // ⑤ 被摸头：吐舌头、甩耳朵、摇尾巴（精灵图，手一直摆就一直播）
-    shake: { src: 'assets/dog/shake.png', frames: 41, cols: 8, fps: 12 }, // ⑥ 握手：坐着抬爪子再放下（精灵图，播一遍）
+    pet:   { src: 'assets/dog/pet.png', frames: 43, cols: 8, fps: 24, repeat: 2 }, // ⑤ 被摸头：吐舌头、甩耳朵、摇尾巴（精灵图，摸一下播两遍，约 3.6 秒）
+    shake: { src: 'assets/dog/shake.png', frames: 41, cols: 8, fps: 24 }, // ⑥ 握手：坐着抬爪子再放下（精灵图，播一遍）
     playDead: { src: 'assets/dog/dead.png', frames: 76, cols: 10, fps: 24 }, // ⑦ 装死：吓一跳→倒地→躺一会儿→爬起来坐好（精灵图，播一遍，约 3.2 秒）
     praise: { src: '', duration: 1300 },            // ⑧ 被夸（开心扭一扭）
     fetch: { src: '', duration: 4000 },             // ⑨ 扔球叼回来（一整段：追球→叼回来；留空就用卡通狗演）

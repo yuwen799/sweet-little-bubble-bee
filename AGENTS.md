@@ -51,6 +51,7 @@ node tests/gestures.test.mjs
 | `main.js` | 摄像头、MediaPipe、画手部骨架、键盘和点击触发、toast |
 | `style.css` | Bubble OS 桌面界面、**内置卡通狗的全部动画**（由 `.dog` 上的 `posture-*` / `st-*` class 驱动） |
 | `index.html` | 内联 SVG 卡通狗，加上界面结构 |
+| `i18n.js` | 界面文字中英文。默认中文；网址加 `?lang=en` 显示英文（用户个人主页嵌入时用英文）。新加界面文字要在 ZH 和 EN 两边都加 |
 
 ## 关键设计决定（别随手推翻）
 
@@ -147,6 +148,8 @@ node tests/gestures.test.mjs
 10. 跑测试，然后 git commit。
 
 ## 开发日志（最新的写在最上面）
+
+- **2026-11-08 · Claude**：加了英文版：新文件 `i18n.js`，网址加 `?lang=en` 就把菜单栏、状态栏、手势说明、摄像头按钮、提示语都换成英文（狗名用 Bubble）；不加参数还是中文，原来的样子不变。用户个人主页 `~/Documents/ChatGPT/个人主页/yuwen-portfolio` 第四页的 "Play with Bubble" 用 iframe 打开 `index.html?lang=en`，文件是用那边的 `scripts/sync-bubble.mjs` 从这里复制过去的，**这里改完要去主页项目运行一次同步**。手势逻辑没动，测试全部通过。只本地提交。
 
 - **2026-11-08 · Claude**：用户用 PixelLab 做的摸头 GIF（16 帧）有一处「往回摆又弹出去」的抽动、两头也不停。在浏览器里用 ImageDecoder 拆帧，重新排成顺滑的左右歪头循环（帧序 `0,0,1,2,3,4,4,4,5,6,7,0,0,8,9,10,10,10,9,8`，去掉第 11–15 帧），存成精灵图 `assets/dog/pet.png`（20 帧、5 列、7fps）。`.dev/serve.mjs` 加了 `POST /.dev/save/<文件名>`（存到 `.dev/out/`，已 gitignore），用来把浏览器里处理好的素材存回硬盘；原始素材放 `.dev/raw/`。以后用户的素材动得怪，可以照这个办法挑帧重排。
 

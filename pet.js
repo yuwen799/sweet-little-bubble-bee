@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 // ============================================================
 //  宠物：状态机 + 显示（内置卡通狗 或 你自己的视频/图片素材）
 // ============================================================
@@ -46,7 +47,7 @@ export class Pet {
     this.render('idle');
   }
 
-  get name() { return this.cfg.petName; }
+  get name() { return t('petName') || this.cfg.petName; }
 
   /** 执行动作。返回 { ok, msg } */
   do(action, opts = {}) {
@@ -96,7 +97,7 @@ export class Pet {
         return { ok: true };
 
       case 'leave': {
-        if (far) return { ok: false, msg: `${this.name}已经走开啦，手掌往回收叫它回来` };
+        if (far) return { ok: false, msg: t('alreadyAway', { name: this.name }) };
         const dur = A.leave.duration || 2200;
         this.el.stage.style.setProperty('--move-dur', `${dur}ms`);
         this.el.stage.classList.add('away');
@@ -177,7 +178,7 @@ export class Pet {
   }
 
   tooFar() {
-    return { ok: false, msg: `${this.name}离得太远了，先把手掌往回收，叫它跑过来` };
+    return { ok: false, msg: t('tooFar', { name: this.name }) };
   }
 
   stopPetting(rerender) {

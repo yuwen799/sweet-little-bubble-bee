@@ -1,6 +1,9 @@
 import { CONFIG } from './config.js';
 import { Pet } from './pet.js';
-import { GestureDetector, POSE_LABEL } from './gestures.js';
+import { GestureDetector } from './gestures.js';
+import { t, poseLabel, applyLanguage } from './i18n.js';
+
+applyLanguage(); // ?lang=en 时把界面换成英文
 
 // MediaPipe 手势识别（从 CDN 加载，需要联网）
 const MP_VERSION = '0.10.14';
@@ -104,7 +107,7 @@ async function createLandmarker() {
 async function startCamera() {
   const btn = $('camBtn');
   btn.disabled = true;
-  setStatus('正在打开摄像头…');
+  setStatus(t('opening'));
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { width: 640, height: 480, facingMode: 'user' },
@@ -113,8 +116,8 @@ async function startCamera() {
     cam.srcObject = stream;
     await cam.play();
   } catch (e) {
-    const why = e && e.name === 'NotAllowedError' ? '没有摄像头权限' : '摄像头打不开';
-    setStatus(`⚠ ${why}（可以先用键盘 1–9、0 试）`);
+    const why = e && e.name === 'NotAllowedError' ? t('noPermission') : t('noCamera');
+    setStatus(t('camFailed', { why }));
     btn.disabled = false;
     return;
   }
@@ -122,15 +125,15 @@ async function startCamera() {
   overlay.width = cam.videoWidth || 640;
   overlay.height = cam.videoHeight || 480;
 
-  setStatus('正在加载手势模型…');
+  setStatus(t('loadingModel'));
   try {
     landmarker = await createLandmarker();
   } catch (e) {
     console.error(e);
-    setStatus('⚠️ 手势模型加载失败（需要联网）');
+    setStatus(t('modelFailed'));
     return;
   }
-  setStatus('✅ 手势识别中');
+  setStatus(t('tracking'));
   requestAnimationFrame(loop);
 }
 
@@ -157,7 +160,7 @@ function loop() {
 
   const out = detector.update(lm, now, other);
   drawHands(hands, main, out.pose);
-  $('poseChip').textContent = `手势：${out.pose ? POSE_LABEL[out.pose] : '没看到手'}${other ? '（两只手）' : ''}`;
+  $('poseChip').textContent = t('poseChip', { pose: out.pose ? poseLabel(out.pose) : t('noHand'), two: other ? t('twoHands') : '' });
   // 「手掌往回收」只用来把走远的狗叫回来；狗在面前时忽略，免得误触发
   if (out.gesture === 'come' && pet.base !== 'away') return;
   if (out.gesture) trigger(out.gesture);

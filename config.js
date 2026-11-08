@@ -28,8 +28,8 @@ export const CONFIG = {
   actions: {
     idle:  { src: 'assets/dog/idle.gif', loop: true }, // 待机：坐着吐舌头（6 帧像素 GIF）
     spin:  { src: 'assets/dog/spin.png', frames: 22, cols: 11, fps: 14 }, // ① 转圈：原地连续转两圈（约 1.6 秒；两圈中间不停顿）（精灵图，播一遍）
-    sit:   { src: 'assets/dog/liedown.png', frames: 5, fps: 3.33 }, // ② 趴下：从坐着趴下去（精灵图，播一遍）
-    lying: { src: 'assets/dog/lying.png', frames: 8, fps: 3.33, loop: true }, //    趴着不动、摇尾巴（趴下后一直是这个样子）
+    sit:   { src: 'assets/dog/liedown.png', frames: 5, fps: 6.67 }, // ② 趴下：从坐着趴下去（精灵图，播一遍，约 0.75 秒）
+    lying: { src: 'assets/dog/lying.png', frames: 6, fps: 6.67, loop: true }, //    趴着不动、尾巴来回摇（趴下后一直是这个样子）
     leave: { src: 'assets/dog/leave.png', frames: 12, cols: 6, fps: 8, duration: 1500 }, // ③ 走开：一下转身，背对你跑远（精灵图；缩小和往远处移由代码做，duration 和精灵图一样长）
     away:  { src: '' },                             //    走远后待着的样子（留空就用 idle）
     come:  { src: 'assets/dog/come.png', frames: 16, cols: 8, fps: 8, duration: 2000 }, // ④ 跑过来：从远处一路跑回来（正面跑步循环）再坐好（精灵图；放大回到面前由代码做）

@@ -26,7 +26,7 @@ export const CONFIG = {
   //   每个动作的画布大小要一样（比如都是 64×64），背景透明。
   actions: {
     idle:  { src: 'assets/dog/idle.gif', loop: true }, // 待机：坐着吐舌头（6 帧像素 GIF）
-    spin:  { src: '', duration: 1300 },             // ① 转圈
+    spin:  { src: 'assets/dog/spin.png', frames: 12, cols: 6, fps: 7 }, // ① 转圈：原地坐着转一整圈（精灵图，播一遍）
     sit:   { src: 'assets/dog/idle.gif', loop: true }, // ② 坐下（暂时和待机共用，都是坐着的）
     leave: { src: '', duration: 2200 },             // ③ 走开（同时会自动缩小、往远处移动）
     away:  { src: '' },                             //    走远后待着的样子（留空就用 idle）

@@ -36,7 +36,7 @@ export const CONFIG = {
     pet:   { src: 'assets/dog/pet.png', frames: 43, cols: 8, fps: 24, repeat: 2 }, // ⑤ 被摸头：吐舌头、甩耳朵、摇尾巴（精灵图，摸一下播两遍，约 3.6 秒）
     shake: { src: 'assets/dog/shake.png', frames: 41, cols: 8, fps: 24 }, // ⑥ 握手：坐着抬爪子再放下（精灵图，播一遍）
     playDead: { src: 'assets/dog/dead.png', frames: 76, cols: 10, fps: 24 }, // ⑦ 装死：吓一跳→倒地→躺一会儿→爬起来坐好（精灵图，播一遍，约 3.2 秒）
-    praise: { src: '', duration: 1300 },            // ⑧ 被夸（开心扭一扭）
+    praise: { src: '', sticker: 'assets/dog/sticker.png', duration: 2000 }, // ⑧ 被夸：biu 一下变成贴纸，弹一弹再变回来（去掉 sticker 就用回扭一扭）
     fetch: { src: '', duration: 4000 },             // ⑨ 扔球叼回来（一整段：追球→叼回来；留空就用卡通狗演）
     kiss:  { src: '', duration: 1600 },             // ⑩ 亲亲（凑到镜头前舔一下）
   },

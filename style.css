@@ -275,6 +275,37 @@ body {
   transform: translate(-50%, -50%); image-rendering: pixelated; pointer-events: none;
 }
 .mouth-ball-px[hidden] { display: none; }
+
+/* ⑧ 被夸 · 贴纸：像素狗 biu 地缩没，贴纸弹出来抖一抖，再 biu 回来 */
+.pet-sticker {
+  position: absolute; left: 50%; bottom: 1%; z-index: 3;
+  height: 98%; width: auto; pointer-events: none;
+  transform-origin: 50% 70%; transform: translateX(-50%) scale(0);
+  filter: drop-shadow(0 5px 0 rgba(11, 11, 12, .22));
+}
+.pet-sticker[hidden] { display: none; }
+.sticker-on .pet-sticker { animation: stickerPop var(--sticker-dur, 2s) cubic-bezier(.3, .7, .4, 1) forwards; }
+.sticker-on .pet-media, .sticker-on .dog { animation: biuOut .16s ease-in forwards; }
+.sticker-back .pet-media, .sticker-back .dog { animation: biuIn .32s cubic-bezier(.3, 1.6, .5, 1) both; }
+@keyframes stickerPop {
+  0%   { transform: translateX(-50%) scale(0) rotate(-18deg); }
+  9%   { transform: translateX(-50%) scale(1.28) rotate(7deg); }
+  16%  { transform: translateX(-50%) scale(.9) rotate(-6deg); }
+  23%  { transform: translateX(-50%) scale(1.1) rotate(4deg); }
+  30%  { transform: translateX(-50%) scale(.98) rotate(-3deg); }
+  37%  { transform: translateX(-50%) scale(1.03) rotate(-4deg); }
+  /* 停一下，左右抖两下 */
+  48%  { transform: translateX(-50%) scale(1.03) rotate(3deg); }
+  56%  { transform: translateX(-50%) scale(1.03) rotate(-4deg); }
+  64%  { transform: translateX(-50%) scale(1.03) rotate(3deg); }
+  72%  { transform: translateX(-50%) scale(1.03) rotate(-2deg); }
+  /* 再猛地放大一下，然后 biu 回去 */
+  82%  { transform: translateX(-50%) scale(1.18) rotate(0deg); }
+  88%  { transform: translateX(-50%) scale(1.12) rotate(-2deg); }
+  100% { transform: translateX(-50%) scale(0) rotate(20deg); }
+}
+@keyframes biuOut { to { transform: scale(0); opacity: 0; } }
+@keyframes biuIn { from { transform: scale(0); opacity: 0; } to { transform: none; opacity: 1; } }
 .ball.flying { opacity: 1; animation: throwBall .9s cubic-bezier(.3, .6, .5, 1) forwards; }
 .ball.dropped { opacity: 1; animation: dropBall .5s ease-out forwards; }
 @keyframes throwBall {

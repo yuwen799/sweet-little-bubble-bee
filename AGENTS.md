@@ -149,6 +149,8 @@ node tests/gestures.test.mjs
 
 ## 开发日志（最新的写在最上面）
 
+- **2026-11-08 · Claude**：被夸改成「biu 一下变成贴纸」：贴纸图来自主页项目里用户的狗狗照片贴纸（`public/assets/bubble/sticker.png`），去掉外圈米色纸边、加干净的白色刀模边，存成 `assets/dog/sticker.png`（414×642）。`config.praise.sticker` 有值时走 `pet.stickerPraise()`：`#petWrap` 加 `sticker-on`，像素狗 `biuOut` 0.16 秒缩没，`#petSticker` 播 `stickerPop`（弹出放大→回弹→左右抖→再放大→biu 回去，时长 = `praise.duration` 2000ms），冒星星；结束加 `sticker-back` 让像素狗弹回来。去掉 `sticker` 就用回原来的扭一扭。贴纸也在 `preload()` 里预加载。只本地提交。
+
 - **2026-11-08 · Claude**：**用户决定**：个人主页里的 Bubble 二级页面（`sync-bubble.mjs`、第四页 Hover 小卡片）先不用管，等这个项目全部做完再一次性更新；平时不要同步，也不用在总结里提醒「主页要同步」。
 
 - **2026-11-08 · Claude**：上传了 GitHub（`7aad85d..762f84d`）。同步了个人主页：在 `~/Documents/ChatGPT/个人主页/yuwen-portfolio` 跑了 `node scripts/sync-bubble.mjs`，测试 12 项通过、`pnpm build` 通过，在主页预览（launch 配置 `yuwen-portfolio-v2`，端口 4180）里确认英文版能播。**注意**：主页第四页的「Hover to pat」小卡片用的是它自己的一份摸头图 `public/assets/bubble/pet.png` 和 `src/BubbleSection.jsx` 里的 `PET` 常量（同步脚本不管它），这次手动换成了新的 43 帧 8 列 24fps；以后改了 `pet.png` 要一起改那边。主页那边只本地提交，没推送。

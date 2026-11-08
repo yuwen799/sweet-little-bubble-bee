@@ -55,6 +55,8 @@ export class Pet {
    */
   preload() {
     this.sheets = {};
+    const sticker = this.cfg.actions.praise?.sticker;
+    if (sticker) { const img = new Image(); img.src = sticker; img.onerror = () => this.broken.add('sticker'); this.sheets[sticker] = { img, aspect: 0 }; }
     for (const a of Object.values(this.cfg.actions)) {
       if (!a?.src || this.sheets[a.src] || /\.(mp4|webm|mov|m4v|ogv)(\?.*)?$/i.test(a.src)) continue;
       const img = new Image();
@@ -104,7 +106,11 @@ export class Pet {
         this.play('dead', A.playDead?.duration || 2000, () => { this.base = 'stand'; this.render('idle'); });
         return { ok: true };
 
-      case 'praise': // 被夸：开心扭一扭，再回到原来的姿势
+      case 'praise': // 被夸：biu 一下变成贴纸（有 sticker 时），或者开心扭一扭，再回到原来的姿势
+        if (A.praise?.sticker && this.el.sticker && !this.broken.has('sticker')) {
+          this.stickerPraise(A.praise.duration || 2000);
+          return { ok: true };
+        }
         this.play('praise', A.praise?.duration || 1300, () => this.render(this.restingAnim()));
         for (let k = 0; k < 5; k++) setTimeout(() => this.spawnHeart(['✨', '⭐', '🌟'], true), k * 180);
         return { ok: true };
@@ -302,6 +308,27 @@ export class Pet {
         ball.className = 'ball';
       };
     });
+  }
+
+  /** 被夸：狗 biu 地缩没 → 贴纸弹出来、抖一抖、放大 → 再 biu 回像素狗 */
+  stickerPraise(ms) {
+    const { wrap, sticker } = this.el;
+    this.busy = true;
+    wrap.classList.remove('sticker-on', 'sticker-back');
+    sticker.style.setProperty('--sticker-dur', `${ms}ms`);
+    sticker.hidden = false;
+    void wrap.offsetWidth; // 让动画每次都从头播
+    wrap.classList.add('sticker-on');
+    for (let k = 0; k < 6; k++) setTimeout(() => this.spawnHeart(['✨', '⭐', '🌟'], true), 120 + k * 160);
+    clearTimeout(this.stickerTimer);
+    this.stickerTimer = setTimeout(() => {
+      sticker.hidden = true;
+      wrap.classList.remove('sticker-on');
+      wrap.classList.add('sticker-back');
+      this.busy = false;
+      this.render(this.restingAnim());
+      this.stickerTimer = setTimeout(() => wrap.classList.remove('sticker-back'), 400);
+    }, ms);
   }
 
   /** 屏幕中间冒出一颗大爱心 */

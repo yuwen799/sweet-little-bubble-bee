@@ -149,6 +149,8 @@ node tests/gestures.test.mjs
 
 ## 开发日志（最新的写在最上面）
 
+- **2026-11-08 · Claude**：转两圈改成连续不停：`spin.png` 重排成 22 帧（11 列）= 原第 0–10 帧 + 第 1–11 帧，去掉了两圈接缝处的「第一圈最后一帧 + 第二圈第一帧」（两张都是正面，连着会顿一下）；`config.spin` 去掉 `repeat`，14fps 约 1.6 秒。原 12 帧可以从 `.dev/raw/spin.gif` 重新做。`repeat` 功能还留着。只本地提交。
+
 - **2026-11-08 · Claude**：转圈改成转两圈（14fps，共约 1.7 秒）：精灵图新增 `repeat` 选项（一次动作里连着播几遍，`playSprite` 里按 `n × repeat` 算结束），`config.spin` 加了 `repeat: 2`。只本地提交。
 
 - **2026-11-08 · Claude**：按用户要求转圈加快 2 倍：`config.spin.fps` 7 → 14（一圈约 0.9 秒）。只本地提交。

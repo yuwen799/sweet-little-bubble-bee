@@ -2,8 +2,10 @@ import { CONFIG } from './config.js';
 import { Pet } from './pet.js';
 import { GestureDetector } from './gestures.js';
 import { t, poseLabel, applyLanguage } from './i18n.js';
+import { setupDecor } from './decor.js';
 
 applyLanguage(); // ?lang=en 时把界面换成英文
+setupDecor(CONFIG.decor); // 页面上到处贴的狗狗贴纸
 
 // MediaPipe 手势识别（从 CDN 加载，需要联网）
 const MP_VERSION = '0.10.14';

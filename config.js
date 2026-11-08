@@ -48,6 +48,18 @@ export const CONFIG = {
   // 每个动作配的小特效（灰尘、小星星、音符、BANG! 之类）。改成 false 就全关掉。
   cuteFx: true,
 
+  // ---------- 页面上的装饰贴纸 ----------
+  // win：贴在哪个窗口（.win-dog 狗狗屏幕 / .win-help 说明 / .win-cam 摄像头）
+  // corner：贴在哪个角（tl 左上 / tr 右上 / bl 左下 / br 右下），一半露在窗口外面
+  // size：高度（像素）；rot：歪多少度；dx / dy：再往外挪多少（像素）
+  // 图片放进 assets/stickers/，还没放的会自动不显示
+  decor: [
+    { src: 'assets/stickers/chef.png',   win: '.win-dog',  corner: 'tr', size: 130, rot: 9 },
+    { src: 'assets/stickers/hoodie.png', win: '.win-dog',  corner: 'br', size: 140, rot: 7 },
+    { src: 'assets/stickers/bow.png',    win: '.win-help', corner: 'tr', size: 92,  rot: -7 },
+    { src: 'assets/stickers/dance.png',  win: '.win-cam',  corner: 'bl', size: 150, rot: -10 },
+  ],
+
   // ---------- 走开后的位置 ----------
   away: {
     scale: 0.38,     // 缩到原来的多少

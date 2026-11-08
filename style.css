@@ -607,8 +607,65 @@ body {
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 /* ---------- 窄屏 / 手机：窗口竖着排，可以上下滚 ---------- */
+/* ---------- 页面装饰贴纸（decor.js） ---------- */
+.win { position: relative; }
+.deco {
+  position: absolute; z-index: 20; height: var(--h); width: auto;
+  cursor: pointer; user-select: none; -webkit-user-drag: none;
+  filter: drop-shadow(2px 4px 0 rgba(11, 11, 12, .28));
+  transform: translate(var(--dx), var(--dy)) rotate(var(--rot));
+  animation: decoFloat var(--float, 3.6s) ease-in-out infinite alternate;
+  transition: filter .2s, scale .25s cubic-bezier(.3, 1.6, .5, 1);
+}
+/* 一角压在窗口上、一部分露在外面（露太多会在屏幕边上被切掉） */
+.deco-tl { left: 0; top: 0; translate: -18% -28%; }
+.deco-tr { right: 0; top: 0; translate: 18% -28%; }
+.deco-bl { left: 0; bottom: 0; translate: -18% 14%; }
+.deco-br { right: 0; bottom: 0; translate: 18% 14%; }
+@keyframes decoFloat {
+  from { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); }
+  to   { transform: translate(var(--dx), calc(var(--dy) - 6px)) rotate(calc(var(--rot) + 3deg)); }
+}
+/* 鼠标放上去：像要被撕起来一样翘起、变大、摆正 */
+.deco:hover {
+  scale: 1.12;
+  filter: drop-shadow(6px 12px 0 rgba(11, 11, 12, .25));
+  animation: decoPeel .35s ease-out forwards;
+}
+@keyframes decoPeel { to { transform: translate(var(--dx), calc(var(--dy) - 10px)) rotate(calc(var(--rot) * .2)); } }
+.deco.boing { animation: decoBoing .8s cubic-bezier(.3, 1.5, .5, 1); }
+.deco.boing-big { animation: decoBoingBig .85s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes decoBoing {
+  0%   { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); }
+  25%  { transform: translate(var(--dx), calc(var(--dy) - 18px)) rotate(calc(var(--rot) - 8deg)); }
+  45%  { transform: translate(var(--dx), var(--dy)) rotate(calc(var(--rot) + 6deg)); }
+  65%  { transform: translate(var(--dx), calc(var(--dy) - 5px)) rotate(calc(var(--rot) - 3deg)); }
+  100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); }
+}
+@keyframes decoBoingBig {
+  0%   { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1); }
+  20%  { transform: translate(var(--dx), calc(var(--dy) - 26px)) rotate(calc(var(--rot) - 14deg)) scale(1.25, .85); }
+  40%  { transform: translate(var(--dx), var(--dy)) rotate(calc(var(--rot) + 10deg)) scale(.9, 1.15); }
+  60%  { transform: translate(var(--dx), calc(var(--dy) - 8px)) rotate(calc(var(--rot) - 5deg)) scale(1.05); }
+  100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1); }
+}
+.deco-pop {
+  position: fixed; z-index: 30; pointer-events: none; font-size: 22px; line-height: 1;
+  transform: translate(-50%, -50%);
+  animation: decoPop .95s cubic-bezier(.15, .8, .3, 1) forwards;
+}
+@keyframes decoPop {
+  0%   { transform: translate(-50%, -50%) scale(.3); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1.1); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .deco { animation: none; } }
+
 @media (max-width: 760px) {
   body { overflow: auto; }
+  .deco { height: calc(var(--h) * .6); }
+  /* 窗口竖着排时，说明窗口右上角的贴纸会挤到狗狗窗口右下角那张，挪到说明窗口右下角 */
+  .win-help .deco-tr { top: auto; bottom: 0; translate: 18% 30%; }
   .menubar .menu, .menubar #poseChip { display: none; }
   .desktop {
     position: static; margin-top: var(--bar); padding: 16px 20px 24px 16px;

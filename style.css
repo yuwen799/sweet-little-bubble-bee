@@ -111,6 +111,33 @@ body {
 .pet-sprite { background-repeat: no-repeat; }
 .pet-media[hidden], .dog[hidden] { display: none; }
 
+/* ---------- 像素狗的代码动效（动作还没素材时，用待机图演） ----------
+   关键帧和卡通狗共用（spin / bob / hop / jump / praise / kiss 在下面定义） */
+.pet-wrap[data-motion] .pet-media { transform-origin: 50% 100%; }
+.pet-wrap[data-motion="spin"] .pet-media { animation: spin 1.3s ease-in-out 1; }
+.pet-wrap[data-motion="walk"] .pet-media { animation: bob .32s ease-in-out infinite alternate; }
+.pet-wrap[data-motion="run"] .pet-media { animation: hop .2s ease-in-out infinite alternate; }
+.pet-wrap[data-motion="happy"] .pet-media { animation: jump .45s ease-out 2; }
+.pet-wrap[data-motion="praise"] .pet-media { animation: praise 1.3s ease-in-out 1; }
+.pet-wrap[data-motion="kiss"] .pet-media { animation: kiss 1.6s ease-in-out 1; }
+.pet-wrap[data-motion="shake"] .pet-media { animation: pxShake 1.6s ease-in-out 1; }
+.pet-wrap[data-motion="dead"] .pet-media {
+  transform-origin: 50% 50%;
+  animation: pxDead .9s cubic-bezier(.4, 1.5, .55, 1) forwards;
+}
+/* 握手：身子一抬一抬地点头 */
+@keyframes pxShake {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  20%, 60% { transform: translateY(-4%) rotate(-5deg); }
+  40%, 80% { transform: translateY(0) rotate(3deg); }
+}
+/* 装死：往后一仰，侧躺倒地，变灰一点 */
+@keyframes pxDead {
+  0% { transform: rotate(0); }
+  18% { transform: rotate(-12deg) translateY(-5%); }
+  100% { transform: rotate(90deg) translateX(21%); filter: saturate(.4) brightness(.9); }
+}
+
 /* ---------- 卡通狗 ---------- */
 .dog { position: absolute; inset: 0; transform-style: preserve-3d; }
 .dog-svg { width: 100%; height: 100%; overflow: visible; }

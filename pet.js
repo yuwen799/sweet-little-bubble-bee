@@ -237,7 +237,17 @@ export class Pet {
     // 让 CSS 动画每次都从头播
     void dog.offsetWidth;
 
-    const { key, src } = this.srcFor(anim);
+    let { key, src } = this.srcFor(anim);
+    // 还没做素材的动作：先用自家狗的待机图 + 代码动效（转一圈、跳一跳、躺倒…），不再切回卡通柴犬
+    let motion = '';
+    if (!src && anim !== 'idle' && this.cfg.pixelFallback !== false) {
+      const idle = this.srcFor('idle');
+      if (idle.src) { key = idle.key; src = idle.src; motion = anim; }
+    }
+    const { wrap } = this.el;
+    wrap.removeAttribute('data-motion');
+    void wrap.offsetWidth; // 让动效每次都从头播
+    if (motion) wrap.dataset.motion = motion;
     this.curAnim = anim;
     this.curKey = key;
 

@@ -39,6 +39,10 @@ export const CONFIG = {
     kiss:  { src: '', duration: 1600 },             // ⑩ 亲亲（凑到镜头前舔一下）
   },
 
+  // 还没放素材的动作（src 留空），用待机图加代码动效来演（转圈、跳、躺倒…）。
+  // 改成 false 就用回内置卡通狗。
+  pixelFallback: true,
+
   // ---------- 走开后的位置 ----------
   away: {
     scale: 0.38,     // 缩到原来的多少

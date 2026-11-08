@@ -149,6 +149,8 @@ node tests/gestures.test.mjs
 
 ## 开发日志（最新的写在最上面）
 
+- **2026-11-08 · Claude**：还没做像素素材的动作（转圈、走开、跑来、握手、装死、被夸、扔球、亲亲）不再切回卡通柴犬，改用自家狗的 `idle.gif` 加 CSS 动效演（`pet.js` 的 `render()` 给 `#petWrap` 加 `data-motion`，样式在 `style.css`「像素狗的代码动效」）。某个动作放了素材就自动用素材。`config.js` 里 `pixelFallback: false` 可以换回卡通狗。测试全部通过。只本地提交。英文版主页需要再运行一次同步。
+
 - **2026-11-08 · Claude**：加了英文版：新文件 `i18n.js`，网址加 `?lang=en` 就把菜单栏、状态栏、手势说明、摄像头按钮、提示语都换成英文（狗名用 Bubble）；不加参数还是中文，原来的样子不变。用户个人主页 `~/Documents/ChatGPT/个人主页/yuwen-portfolio` 第四页的 "Play with Bubble" 用 iframe 打开 `index.html?lang=en`，文件是用那边的 `scripts/sync-bubble.mjs` 从这里复制过去的，**这里改完要去主页项目运行一次同步**。手势逻辑没动，测试全部通过。只本地提交。
 
 - **2026-11-08 · Claude**：用户用 PixelLab 做的摸头 GIF（16 帧）有一处「往回摆又弹出去」的抽动、两头也不停。在浏览器里用 ImageDecoder 拆帧，重新排成顺滑的左右歪头循环（帧序 `0,0,1,2,3,4,4,4,5,6,7,0,0,8,9,10,10,10,9,8`，去掉第 11–15 帧），存成精灵图 `assets/dog/pet.png`（20 帧、5 列、7fps）。`.dev/serve.mjs` 加了 `POST /.dev/save/<文件名>`（存到 `.dev/out/`，已 gitignore），用来把浏览器里处理好的素材存回硬盘；原始素材放 `.dev/raw/`。以后用户的素材动得怪，可以照这个办法挑帧重排。

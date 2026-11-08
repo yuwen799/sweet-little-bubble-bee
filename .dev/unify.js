@@ -31,27 +31,30 @@ export async function idlePalette(src = '/assets/dog/idle.gif') {
   return { frames: half, pal, cdf: cdf(L) };
 }
 
-export function unifyFrames(frames, ref, outline = [0x03, 0x09, 0x1d]) {
+// keep(r,g,b,x,y)：返回 true 的像素原样保留（比如地上的影子、尘土），不调色也不描边
+export function unifyFrames(frames, ref, { outline = [0x03, 0x09, 0x1d], keep = () => false } = {}) {
   const L = [];
   for (const f of frames) for (let i = 0; i < f.data.length; i += 4) {
-    const d = f.data; if (d[i + 3] > 110 && !pink(d[i], d[i + 1], d[i + 2])) L.push(lum(d[i], d[i + 1], d[i + 2]));
+    const d = f.data, x = (i / 4) % f.width, y = Math.floor(i / 4 / f.width);
+    if (d[i + 3] > 110 && !pink(d[i], d[i + 1], d[i + 2]) && !keep(d[i], d[i + 1], d[i + 2], x, y)) L.push(lum(d[i], d[i + 1], d[i + 2]));
   }
   const cS = cdf(L), map = new Float64Array(256);
   for (let v = 0; v < 256; v++) { let j = 0; while (j < 255 && ref.cdf[j] < cS[v]) j++; map[v] = j; }
   return frames.map((f) => {
-    const W = f.width, H = f.height, d = f.data, o = new ImageData(W, H), e = o.data;
+    const W = f.width, H = f.height, d = f.data, o = new ImageData(W, H), e = o.data, kept = new Set();
     for (let i = 0; i < d.length; i += 4) {
       if (d[i + 3] <= 110) continue;
       let r = d[i], g = d[i + 1], b = d[i + 2];
+      if (keep(r, g, b, (i / 4) % W, Math.floor(i / 4 / W))) { e[i] = r; e[i + 1] = g; e[i + 2] = b; e[i + 3] = 255; kept.add(i); continue; }
       if (!pink(r, g, b)) { const l = lum(r, g, b) || 1, k = map[Math.min(255, Math.round(l))] / l; r *= k; g *= k; b *= k; }
       const [R, G, B] = nearest(ref.pal, r, g, b);
       e[i] = R; e[i + 1] = G; e[i + 2] = B; e[i + 3] = 255;
     }
-    const op = (x, y) => x >= 0 && y >= 0 && x < W && y < H && e[(y * W + x) * 4 + 3] > 0;
+    const op = (x, y) => x >= 0 && y >= 0 && x < W && y < H && e[(y * W + x) * 4 + 3] > 0 && !kept.has((y * W + x) * 4);
     const edge = [];
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++)
       if (op(x, y) && (!op(x - 1, y) || !op(x + 1, y) || !op(x, y - 1) || !op(x, y + 1))) edge.push((y * W + x) * 4);
-    for (const i of edge) if (!pink(e[i], e[i + 1], e[i + 2])) { e[i] = outline[0]; e[i + 1] = outline[1]; e[i + 2] = outline[2]; }
+    for (const i of edge) if (!kept.has(i) && !pink(e[i], e[i + 1], e[i + 2])) { e[i] = outline[0]; e[i + 1] = outline[1]; e[i + 2] = outline[2]; }
     return o;
   });
 }

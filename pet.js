@@ -195,17 +195,18 @@ export class Pet {
     const awayBottom = bottom + (parseFloat(this.cfg.away.offsetY) / 100) * h;
     const feet = 0.05; // 精灵图里脚底离画面底边的比例
     const size = 0.12 * h; // 近处的球有多大（和叼在嘴里一样大）
-    const startX = cx + 0.22 * h, startY = bottom - 0.08 * h;
-    const endX = cx + 0.1 * h * k, endY = awayBottom - feet * h * k - 0.06 * h * k;
+    // 球走狗的右边飞，落在狗走到的地方的右侧，不盖住狗
+    const startX = cx + 0.42 * h, startY = bottom - 0.08 * h;
+    const endX = cx + 0.5 * h * k, endY = awayBottom - feet * h * k - 0.06 * h * k;
     const pos = (x, y, s, r = 0) => `translate(${x - size / 2}px, ${y - size / 2}px) scale(${s}) rotate(${r}deg)`;
 
     ball.getAnimations().forEach((a) => a.cancel());
-    ball.className = 'ball px';
+    ball.className = 'ball px far'; // far：球在远处，排在狗后面
     ball.style.width = `${size}px`;
     // 抛出去：往上飞、越飞越小，落地弹一下
     ball.animate([
       { transform: pos(startX, startY, 1.3, 0), offset: 0 },
-      { transform: pos((startX + endX) / 2, endY - 0.5 * h, 0.75, 300), offset: 0.5 },
+      { transform: pos(cx + 0.36 * h, endY - 0.5 * h, 0.75, 300), offset: 0.5 },
       { transform: pos(endX, endY, k, 520), offset: 0.82 },
       { transform: pos(endX, endY - 0.06 * h * k, k, 560), offset: 0.91 },
       { transform: pos(endX, endY, k, 600), offset: 1 },

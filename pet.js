@@ -307,6 +307,12 @@ export class Pet {
       el.style.backgroundImage = `url("${src}")`;
       // 检查图片能不能加载，加载失败就退回卡通狗
       const probe = new Image();
+      // 每一帧不一定是正方形：按帧的宽高比设宽度，不然会被拉扁
+      el.style.width = '';
+      probe.onload = () => {
+        if (el.dataset.src !== src) return;
+        el.style.width = `${((probe.naturalWidth / cols) / (probe.naturalHeight / rows)) * 100}%`;
+      };
       probe.onerror = () => {
         if (el.dataset.src !== src) return;
         console.warn(`素材加载失败，改用卡通狗：${src}`);

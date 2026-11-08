@@ -149,6 +149,8 @@ node tests/gestures.test.mjs
 
 ## 开发日志（最新的写在最上面）
 
+- **2026-11-08 · Claude**：摸头换成用户新做的视频（`摸头.mp4`，720×1280、10 秒、24fps）：视频里的透明格子是「画进去」的假透明。用 `.dev/frames.swift`（Mac 自带的 AVFoundation，不用 ffmpeg）按 12fps 拆帧，挑了衔接最顺的一段（第 41–83 帧，约 3.6 秒循环），在浏览器里从边缘洪水填充去掉浅灰/白格子，按待机图的大小和脚底位置对齐，做成 `assets/dog/pet.png`（43 帧、8 列、184×224 每帧、12fps、1.6MB）。顺手修了精灵图会被拉成正方形的问题（`playSprite` 按帧宽高比设宽度）。测试全部通过。只本地提交，英文版主页需要再同步一次。
+
 - **2026-11-08 · Claude**：还没做像素素材的动作（转圈、走开、跑来、握手、装死、被夸、扔球、亲亲）不再切回卡通柴犬，改用自家狗的 `idle.gif` 加 CSS 动效演（`pet.js` 的 `render()` 给 `#petWrap` 加 `data-motion`，样式在 `style.css`「像素狗的代码动效」）。某个动作放了素材就自动用素材。`config.js` 里 `pixelFallback: false` 可以换回卡通狗。测试全部通过。只本地提交。英文版主页需要再运行一次同步。
 
 - **2026-11-08 · Claude**：加了英文版：新文件 `i18n.js`，网址加 `?lang=en` 就把菜单栏、状态栏、手势说明、摄像头按钮、提示语都换成英文（狗名用 Bubble）；不加参数还是中文，原来的样子不变。用户个人主页 `~/Documents/ChatGPT/个人主页/yuwen-portfolio` 第四页的 "Play with Bubble" 用 iframe 打开 `index.html?lang=en`，文件是用那边的 `scripts/sync-bubble.mjs` 从这里复制过去的，**这里改完要去主页项目运行一次同步**。手势逻辑没动，测试全部通过。只本地提交。

@@ -108,7 +108,7 @@ body {
   transform: translateX(-50%) translateY(var(--away-y)) scale(var(--away-scale));
 }
 .pet-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
-.pet-sprite { background-repeat: no-repeat; }
+.pet-sprite { background-repeat: no-repeat; margin-inline: auto; } /* 宽度由 pet.js 按帧比例设，居中 */
 .pet-media[hidden], .dog[hidden] { display: none; }
 
 /* ---------- 像素狗的代码动效（动作还没素材时，用待机图演） ----------

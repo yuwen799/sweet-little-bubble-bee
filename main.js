@@ -123,9 +123,16 @@ function loop() {
   // 镜像：让“往右”就是你看到的往右
   const lm = raw ? raw.map((p) => ({ x: 1 - p.x, y: p.y, z: p.z })) : null;
 
-  const out = detector.update(lm, now);
+  // 左右手：MediaPipe 默认画面是镜像过的，我们给的是摄像头原始画面，所以它说的左右是反的
+  const label = res.handedness?.[0]?.[0]?.categoryName || null;
+  let hand = label;
+  if (label && CONFIG.gestures.handednessSwap !== false) hand = label === 'Left' ? 'Right' : 'Left';
+
+  const out = detector.update(lm, now, hand);
   drawHand(lm, out.pose);
-  $('poseChip').textContent = `手势：${out.pose ? POSE_LABEL[out.pose] : '没看到手'}`;
+  let poseText = out.pose ? POSE_LABEL[out.pose] : '没看到手';
+  if (out.pose === 'open' && out.palmSide) poseText += out.palmSide === 1 ? '（手心）' : '（手背）';
+  $('poseChip').textContent = `手势：${poseText}`;
   // 「手掌往回收」只用来把走远的狗叫回来；狗在面前时忽略，免得误触发
   if (out.gesture === 'come' && pet.base !== 'away') return;
   if (out.gesture) trigger(out.gesture);

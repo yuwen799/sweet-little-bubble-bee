@@ -19,7 +19,8 @@ const THUMB = { // [第一关节 lm3, 指尖 lm4]
   up:  [[-0.05, -0.03], [-0.05, -0.07]],
 };
 
-/** 合成 21 个关键点。(cx,cy)=手的位置，s=大小，c=手心朝向（1 手心，-1 手背，中间=翻到一半） */
+/** 合成 21 个关键点。(cx,cy)=手的位置，s=大小，
+ *  c=朝向：右手 1 = 手心朝屏幕、-1 = 手背；左手正好相反（左手手心 = -1）。中间值 = 翻到一半 */
 function hand(pose, cx, cy, s = 1, c = 1) {
   const { ext, thumb } = SHAPES[pose];
   const P = (x, y) => ({ x: cx + x * c * s, y: cy + y * s, z: 0 });
@@ -38,14 +39,14 @@ function hand(pose, cx, cy, s = 1, c = 1) {
 // 让食指尖（而不是手腕）落在 (tx,ty)
 const at = (pose, tx, ty, s = 1, c = 1) => hand(pose, tx + 0.03 * s * c, ty + 0.07 * s, s, c);
 
-/** 以 30fps 喂 ms 毫秒的帧，frames(u) 的 u 从 0 走到 1 */
-function run(frames, ms) {
+/** 以 30fps 喂 ms 毫秒的帧，frames(u) 的 u 从 0 走到 1；hand = 真实左右手 */
+function run(frames, ms, hand = 'Right') {
   const d = new GestureDetector(CONFIG.gestures);
   const got = [];
   const n = Math.round(ms / 33);
   for (let i = 0; i <= n; i++) {
     const t = 1000 + i * 33;
-    const out = d.update(frames(i / n, t), t);
+    const out = d.update(frames(i / n, t), t, hand);
     if (out.gesture) got.push(out.gesture);
   }
   return got;
@@ -72,15 +73,24 @@ const cases = [
   ['leave 手枪往旁边一划', 'leave', () => run(u => at('gun', .3 + .3*u, .5), 350)],
   ['come  手掌往回收', 'come', () => run(u => at('open', .5, .5, 1.5 - .5*u), 500)],
   ['pet   手掌左右摆', 'pet', () => run(u => at('open', .5 + .07*wave(u, 2), .5), 1500)],
-  ['roll  手心翻到手背', 'roll', () => run(u => at('open', .5, .5, 1, Math.cos(Math.min(1, u*1.4)*Math.PI)), 600)],
-  ['roll  手背翻回手心', 'roll', () => run(u => at('open', .5, .5, 1, -Math.cos(Math.min(1, u*1.4)*Math.PI)), 600)],
-  ['shake 手掌上下抖', 'shake', () => run(u => at('open', .5, .5 + .06*wave(u, 2)), 1400)],
-  ['dead  手枪瞄准后上甩', 'dead', () => run(u => at('gun', .5, .55 - .12*ease(u, .7, .9)), 900)],
+  ['roll  右手 手背翻到手心', 'roll', () => run(u => at('open', .5, .5, 1, -Math.cos(ease(u, .3, .8)*Math.PI)), 900)],
+  ['roll  左手 手背翻到手心', 'roll', () => run(u => at('open', .5, .5, 1, Math.cos(ease(u, .3, .8)*Math.PI)), 900, 'Left')],
+  ['shake 拳头上下晃', 'shake', () => run(u => at('fist', .5, .5 + .06*wave(u, 2)), 1400)],
+  ['shake 竖拇指的拳头上下晃', 'shake', () => run(u => at('thumb', .5, .5 + .06*wave(u, 2)), 1400)],
+  ['shake 晃完握着拳不动 → 不趴下', 'shake', () => run(u => at('fist', .5, .5 + .06*wave(Math.min(u*2.8, 1), 2)), 2800), 1],
+  ['dead  手枪瞄准→上甩→停住', 'dead', () => run(u => at('gun', .5, .55 - .12*ease(u, .5, .65)), 1000)],
   ['lie   握拳停住', 'lie', () => run(() => at('fist', .5, .5), 1000)],
   ['lie   握拳停 3 秒只触发一次', 'lie', () => run(() => at('fist', .5, .5), 3000), 1],
   ['praise 竖拇指停住', 'praise', () => run(() => at('thumb', .5, .5), 800)],
   ['praise 停 3 秒只触发一次', 'praise', () => run(() => at('thumb', .5, .5), 3000), 1],
 
+  ['--    右手 手心翻到手背', null, () => run(u => at('open', .5, .5, 1, Math.cos(ease(u, .3, .8)*Math.PI)), 900)],
+  ['--    左手 手心翻到手背', null, () => run(u => at('open', .5, .5, 1, -Math.cos(ease(u, .3, .8)*Math.PI)), 900, 'Left')],
+  ['--    手掌上下抖(张开手)', null, () => run(u => at('open', .5, .5 + .06*wave(u, 2)), 1400)],
+  ['--    手枪停住后开始画圈', 'spin', () => run(u => { const k = ease(u, .3, 1); const a = Math.PI/2 - k*2*Math.PI; return at('gun', .5 + .08*Math.cos(a), .5 + .08*Math.sin(a)); }, 1500)],
+  ['--    单指停住后开始画圈', 'spin', () => run(u => { const k = ease(u, .3, 1); const a = Math.PI/2 + k*2*Math.PI; return at('point', .5 + .08*Math.cos(a), .5 + .08*Math.sin(a)); }, 1500)],
+  ['--    手枪上甩后接着横着走', null, () => run(u => at('gun', .5 + .15*ease(u, .65, .9), .55 - .12*ease(u, .5, .65)), 1000)],
+  ['--    手枪慢慢往上抬', null, () => run(u => at('gun', .5, .55 - .12*ease(u, .3, 1)), 1200)],
   ['--    手背朝屏幕不动', null, () => run(() => at('open', .5, .5, 1, -1), 2000)],
   ['--    手背左右摆→摸头', 'pet', () => run(u => at('open', .5 + .07*wave(u, 2), .5, 1, -1), 1500)],
   ['--    手掌不动', null, () => run(() => at('open', .5, .5), 2000)],
@@ -88,7 +98,7 @@ const cases = [
   ['--    食指斜着往下划', null, () => run(u => at('point', .3 + .25*u, .3 + .25*u), 350)],
   ['--    大圈不算走开', 'spin', () => run(u => at('point', .5 + .14*Math.cos(u*2*Math.PI), .5 + .14*Math.sin(u*2*Math.PI)), 1100)],
   ['--    手掌推向屏幕', null, () => run(u => at('open', .5, .5, 1 + .5*u), 500)],
-  ['--    翻手时手变大', 'roll', () => run(u => at('open', .5, .5, 1 + .4*u, Math.cos(Math.min(1, u*1.4)*Math.PI)), 600)],
+  ['--    翻手时手变大', 'roll', () => run(u => at('open', .5, .5, 1 + .4*u, -Math.cos(ease(u, .3, .8)*Math.PI)), 900)],
   ['--    摆手时手变大', 'pet', () => run(u => at('open', .5 + .07*wave(u, 2), .5, 1 + .4*u), 1500)],
   ['--    单指(拇指收着)上甩', null, () => run(u => at('point', .5, .55 - .12*ease(u, .7, .9)), 900)],
   ['--    手枪没瞄准直接上甩', null, () => run(u => at('gun', .5, .6 - .15*u), 500)],

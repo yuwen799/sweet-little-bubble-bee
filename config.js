@@ -59,15 +59,19 @@ export const CONFIG = {
     petSwings: 2,          // 至少来回摆几次
     petMinAmplitude: 0.035,// 每次摆动幅度
 
-    // ⑥ 手掌翻面（手心↔手背）
+    // ⑥ 手背朝屏幕 → 翻成手心朝屏幕（只认这个方向）
     flipMs: 900,           // 多长时间内翻完算数（毫秒）
+    // 左上角会显示「张开手掌（手心）/（手背）」。如果显示的正好反了，把这里改成 false
+    handednessSwap: true,
 
-    // ⑦ 手掌上下抖（握手）
-    shakeSwings: 2,        // 至少上下抖几次
+    // ⑦ 拳头上下晃（握手）
+    shakeSwings: 2,        // 至少上下晃几次
     shakeMinAmplitude: 0.03,
 
     // ⑧ 比手枪往上甩（装死）
     bangMinRise: 0.06,     // 往上甩多少（相对画面高度）
+    bangAimMs: 250,        // 甩之前要瞄准停稳多久（毫秒）
+    bangSettleMs: 150,     // 甩完要停住多久（毫秒），用来和画圈区分
 
     // ⑨⑩ 停住类手势：停多久算数（毫秒）。一直停着只触发一次
     lieHoldMs: 700,        // 握拳停住 → 趴下

@@ -149,6 +149,7 @@ node tests/gestures.test.mjs
 
 ## 开发日志（最新的写在最上面）
 
+- **2026-11-08 · Claude**：个人主页不再复制这个原型：已删掉主页里的 `public/play/bubble/` 和 `scripts/sync-bubble.mjs`，主页的 Play 按钮直接在新标签页打开线上版 https://yuwen799.github.io/sweet-little-bubble-bee/ 。以后这里更新只要推到 GitHub Pages，主页不用再同步。
 - **2026-11-08 · Claude**：按用户选择（方法一）公开上线：仓库 `yuwen799/sweet-little-bubble-bee` 改成公开，开了 GitHub Pages（main 分支根目录）。**公开网址：https://yuwen799.github.io/sweet-little-bubble-bee/** ——以后每次 git push 都会自动更新（等一两分钟）。打开过线上网址，图片都 200、动作能播、控制台没报错。公开前检查过仓库：没有密码/密钥，提交作者是 GitHub noreply 邮箱。注意：现在所有文件（包括这份交接文档）任何人都能看到，别往仓库里放私人东西。
 
 - **2026-11-08 · Claude**：按用户要求：① 扔球和被夸换顺序：说明列表扔球 8、被夸 9，`main.js` 的 `ACTIONS` 同步调换（按键跟着变），README 手势表也换了。② 背景音乐音量减半（`sound.js` 里 musicBus 0.5 → 0.25），音效不变。③ 装饰贴纸不再随机：`config.decor` 改回固定数组，位置是用户截图圈出来的——蓝卫衣贴在狗狗屏幕里左上的空白处（新支持 `left` / `top` 百分比贴在窗口里面，类 `.deco-in`），粉蝴蝶结狗狗窗口右上、厨师狗狗窗口右下、跳舞摄像头窗口左下；大小 170 / 125 / 140 / 95 拉开差别。在 1440x900、1920x1000、手机 375 宽看过，不遮字、不出界；按 8 是扔球、9 是被夸。只本地提交。

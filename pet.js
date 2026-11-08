@@ -93,6 +93,7 @@ export class Pet {
       case 'spin':
         if (far) return this.tooFar();
         this.play('spin', A.spin.duration || 1300, () => { this.base = 'stand'; this.render('idle'); });
+        this.cute('spin');
         return { ok: true };
 
       case 'sit': // 趴下（内部名字还叫 sit）：播一遍趴下去，然后一直趴着摇尾巴
@@ -100,16 +101,19 @@ export class Pet {
         if (this.base === 'sit') { this.render('lying'); return { ok: true }; }
         this.base = 'sit';
         this.play('sit', 1500, () => this.render('lying'));
+        this.cute('sit');
         return { ok: true };
 
       case 'shake': // 握手：坐着抬爪子，握完继续坐着（待机就是坐着的）
         if (far) return this.tooFar();
         this.play('shake', A.shake?.duration || 1600, () => { this.base = 'stand'; this.render('idle'); });
+        this.cute('shake');
         return { ok: true };
 
       case 'dead': // 装死：「砰」倒地，躺 2 秒后自己爬起来（用户要求不要一直躺着）
         if (far) return this.tooFar();
         this.play('dead', A.playDead?.duration || 2000, () => { this.base = 'stand'; this.render('idle'); });
+        this.cute('dead');
         return { ok: true };
 
       case 'praise': // 被夸：biu 一下变成贴纸（有 sticker 时），或者开心扭一扭，再回到原来的姿势
@@ -143,6 +147,7 @@ export class Pet {
         this.el.stage.style.setProperty('--move-dur', `${dur}ms`);
         this.el.stage.classList.add('away');
         this.play('walk', dur, () => { this.base = 'away'; this.render('away'); });
+        this.cute('leave', dur);
         return { ok: true };
       }
 
@@ -152,6 +157,7 @@ export class Pet {
           this.el.stage.style.setProperty('--move-dur', `${dur}ms`);
           this.el.stage.classList.remove('away');
           this.play('run', dur, () => { this.base = 'stand'; this.render('idle'); });
+          this.cute('come', dur);
         } else {
           this.play('happy', 900, () => { this.base = 'stand'; this.render('idle'); });
         }
@@ -166,6 +172,7 @@ export class Pet {
           this.play('pet', 4000, () => this.render(this.restingAnim()));
           const ms = (P.frames * (P.repeat || 1) * 1000) / (P.fps || 10);
           for (let t = 0; t < ms - 300; t += 450) setTimeout(() => this.spawnHeart(undefined, true), t);
+          this.cute('pet', ms);
           return { ok: true };
         }
         // 卡通狗 / 循环素材：手一直摆就一直摸
@@ -262,6 +269,12 @@ export class Pet {
       { transform: pos(endX, endY, k, 600), offset: 1 },
     ], { duration: 900, easing: 'ease-out', fill: 'forwards' });
 
+    if (this.cfg.cuteFx !== false) {
+      this.pop('!', 50, -2, { cls: 'bang', size: 12 });
+      at(900, () => this.stagePuff(endX, endY)); // 球落地扬起一点灰
+      for (let t = 0; t < goMs - 200; t += 300) at(t, () => this.puff(t % 600 ? 66 : 34, 93, t % 600 ? 1 : -1));
+    }
+
     // 狗走过去（和球同时出发，走开动画完整播完）
     stage.style.setProperty('--move-dur', `${goMs}ms`);
     stage.classList.add('away');
@@ -309,6 +322,7 @@ export class Pet {
       this.busy = false;
       this.render('idle');
       for (let n = 0; n < 4; n++) setTimeout(() => this.spawnHeart(undefined, true), n * 150);
+      if (this.cfg.cuteFx !== false) at(450, () => this.stagePuff(dropX + 0.05 * h, floorY + size / 2, '★'));
     });
     // 球在你面前放一会儿再消失
     at(goMs + backMs + 3200, () => {
@@ -348,10 +362,11 @@ export class Pet {
       };
       at(ms * 0.17, () => { smash('MWAH!'); wrap.classList.add('glitch'); });
       at(ms * 0.2, () => this.bigHeart());
+      at(ms * 0.42, () => { this.rings('#ff7fb2', 2); this.burst(16); this.word('♥♥♥', 'kiss'); });
       at(ms * 0.56, () => wrap.classList.remove('glitch'));
       at(ms * 0.66, () => { smash('SMOOCH!'); this.heartRain(26, ms * 0.34); wrap.classList.add('glitch'); });
       at(ms * 0.84, () => wrap.classList.remove('glitch'));
-      for (let k = 0; k < 16; k++) at(ms * 0.2 + k * 100, () => this.spawnHeart(['❤', '💕', '💗', '💖', '💋'], true));
+      for (let k = 0; k < 24; k++) at(ms * 0.2 + k * 120, () => this.spawnHeart(['❤', '💕', '💗', '💖', '💋'], true));
       at(ms * 0.93, () => this.shatter(src, 12)); // 最后碎成一堆小贴纸飞走
     } else {
       // 被夸：「GOOD DOG!」印章砸下来 + 彩纸炸开；最后猛放大时再来一轮
@@ -361,7 +376,8 @@ export class Pet {
         this.confetti(36);
         this.rings('#f2c94c', 2);
       });
-      for (let k = 0; k < 8; k++) at(150 + k * 140, () => this.spawnHeart(['✨', '⭐', '🌟'], true));
+      for (let k = 0; k < 14; k++) at(150 + k * 180, () => this.spawnHeart(['✨', '⭐', '🌟'], true));
+      at(ms * 0.45, () => { this.confetti(22); this.rings('#f2c94c', 2); this.word('★ ★ ★', 'praise'); });
       at(ms * 0.8, () => {
         this.screenShake();
         this.confetti(30);
@@ -461,6 +477,116 @@ export class Pet {
       this.el.stage.appendChild(s);
       setTimeout(() => s.remove(), 900);
     }
+  }
+
+  /** 一个动作播完要多久（精灵图按帧数算，其他按 duration） */
+  spriteMs(key, fallback) {
+    const a = this.cfg.actions[key] || {};
+    return a.frames > 1 && a.fps ? (a.frames * (a.repeat || 1) * 1000) / a.fps : fallback;
+  }
+
+  /**
+   * 每个动作配一点可爱的小特效（不抢戏）。位置用狗框（#petWrap）的百分比，跟着狗一起走远、变小。
+   * config.cuteFx = false 可以全部关掉。
+   */
+  cute(kind, ms) {
+    if (this.cfg.cuteFx === false) return;
+    const at = (t, fn) => setTimeout(fn, t);
+    const pop = (txt, x, y, o) => this.pop(txt, x, y, o);
+    const feet = (t, n = 2) => at(t, () => { for (let k = 0; k < n; k++) this.puff(k % 2 ? 66 : 34, 93, k % 2 ? 1 : -1); });
+    switch (kind) {
+      case 'spin': {
+        const d = this.spriteMs('spin', 1300);
+        feet(0);
+        for (let k = 0; k < 5; k++) at(150 + k * (d / 6), () => pop('✦', 18 + Math.random() * 64, 15 + Math.random() * 45, { cls: 'twinkle' }));
+        at(d - 100, () => this.orbit(50, 6, 1300)); // 转晕了
+        break;
+      }
+      case 'sit':
+        at(380, () => { this.puff(24, 92, -1); this.puff(76, 92, 1); });
+        at(500, () => pop('♡', 72, 30, { cls: 'pink' }));
+        at(800, () => pop('♪', 26, 34, { cls: 'note' }));
+        break;
+      case 'leave':
+        for (let t = 0; t < ms - 200; t += 300) feet(t, 1);
+        break;
+      case 'come':
+        at(0, () => pop('!', 50, -2, { cls: 'bang', size: 12 }));
+        for (let t = 150; t < ms - 300; t += 300) feet(t, 1);
+        at(ms, () => { pop('♡', 34, 8, { cls: 'pink' }); pop('♡', 66, 4, { cls: 'pink', delay: 120 }); });
+        break;
+      case 'pet':
+        for (let t = 300; t < ms - 300; t += 700) at(t, () => pop(Math.random() < 0.5 ? '♪' : '♫', 18 + Math.random() * 64, 10 + Math.random() * 15, { cls: 'note' }));
+        break;
+      case 'shake': {
+        const d = this.spriteMs('shake', 1600);
+        at(d * 0.3, () => pop('HI!', 50, -4, { cls: 'word', size: 10 }));
+        at(d * 0.42, () => pop('★', 64, 46, { cls: 'twinkle', size: 9 }));
+        at(d * 0.62, () => pop('✦', 70, 54, { cls: 'twinkle' }));
+        break;
+      }
+      case 'dead': {
+        const d = this.spriteMs('playDead', 2000);
+        at(60, () => pop('BANG!', 50, -6, { cls: 'word bangword', size: 12 }));
+        at(d * 0.32, () => { this.puff(30, 92, -1); this.puff(74, 92, 1); });
+        at(d * 0.36, () => this.orbit(70, 52, d * 0.26)); // 躺着冒金星
+        at(d * 0.66, () => pop('!', 54, 18, { cls: 'bang', size: 12 }));
+        break;
+      }
+    }
+  }
+
+  /** 狗身边冒一个小符号/小字，往上飘 */
+  pop(txt, x, y, { cls = '', size = 8, delay = 0 } = {}) {
+    const p = document.createElement('span');
+    p.className = `fx-pop ${cls}`;
+    p.textContent = txt;
+    p.style.left = `${x}%`;
+    p.style.top = `${y}%`;
+    p.style.setProperty('--sz', `${size}cqmin`);
+    p.style.animationDelay = `${delay}ms`;
+    this.el.wrap.appendChild(p);
+    setTimeout(() => p.remove(), 1200 + delay);
+  }
+
+  /** 脚边一小团灰尘，往 dir（-1 左 / 1 右）飘 */
+  puff(x, y, dir = 1) {
+    const p = document.createElement('span');
+    p.className = 'fx-puff';
+    p.style.left = `${x}%`;
+    p.style.top = `${y}%`;
+    p.style.setProperty('--dir', dir);
+    this.el.wrap.appendChild(p);
+    setTimeout(() => p.remove(), 700);
+  }
+
+  /** 舞台上某个像素位置冒一团灰（或一个符号），扔球落地用 */
+  stagePuff(x, y, txt) {
+    const p = document.createElement('span');
+    p.className = txt ? 'fx-pop twinkle' : 'fx-puff';
+    if (txt) { p.textContent = txt; p.style.setProperty('--sz', '7cqmin'); }
+    p.style.left = `${x}px`;
+    p.style.top = `${y}px`;
+    p.style.zIndex = 4;
+    this.el.stage.appendChild(p);
+    setTimeout(() => p.remove(), 1200);
+  }
+
+  /** 头顶转圈的小金星（晕乎乎） */
+  orbit(x, y, ms) {
+    const o = document.createElement('div');
+    o.className = 'fx-orbit';
+    o.style.left = `${x}%`;
+    o.style.top = `${y}%`;
+    o.style.setProperty('--dur', `${ms}ms`);
+    for (let k = 0; k < 3; k++) {
+      const s = document.createElement('span');
+      s.textContent = k === 1 ? '✦' : '★';
+      s.style.animationDelay = `${-k * 260}ms`;
+      o.appendChild(s);
+    }
+    this.el.wrap.appendChild(o);
+    setTimeout(() => o.remove(), ms);
   }
 
   /** 屏幕抖一下 */

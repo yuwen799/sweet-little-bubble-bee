@@ -36,14 +36,17 @@ export const CONFIG = {
     pet:   { src: 'assets/dog/pet.png', frames: 43, cols: 8, fps: 24, repeat: 2 }, // ⑤ 被摸头：吐舌头、甩耳朵、摇尾巴（精灵图，摸一下播两遍，约 3.6 秒）
     shake: { src: 'assets/dog/shake.png', frames: 41, cols: 8, fps: 24 }, // ⑥ 握手：坐着抬爪子再放下（精灵图，播一遍）
     playDead: { src: 'assets/dog/dead.png', frames: 76, cols: 10, fps: 24 }, // ⑦ 装死：吓一跳→倒地→躺一会儿→爬起来坐好（精灵图，播一遍，约 3.2 秒）
-    praise: { src: '', sticker: 'assets/dog/sticker.png', duration: 2400 }, // ⑧ 被夸：biu 一下变成贴纸，弹一弹再变回来（去掉 sticker 就用回扭一扭）
+    praise: { src: '', sticker: 'assets/dog/sticker.png', duration: 3400 }, // ⑧ 被夸：biu 一下变成贴纸，弹一弹再变回来（去掉 sticker 就用回扭一扭）
     fetch: { src: '', duration: 4000 },             // ⑨ 扔球叼回来（一整段：追球→叼回来；留空就用卡通狗演）
-    kiss:  { src: '', sticker: 'assets/dog/kiss-sticker.png', duration: 3000 }, // ⑩ 亲亲：biu 变成大鼻子贴纸，怼到屏幕上狂亲，爱心星星炸开（去掉 sticker 就用回凑近舔一下）
+    kiss:  { src: '', sticker: 'assets/dog/kiss-sticker.png', duration: 4200 }, // ⑩ 亲亲：biu 变成大鼻子贴纸，怼到屏幕上狂亲，爱心星星炸开（去掉 sticker 就用回凑近舔一下）
   },
 
   // 还没放素材的动作（src 留空），用待机图加代码动效来演（转圈、跳、躺倒…）。
   // 改成 false 就用回内置卡通狗。
   pixelFallback: true,
+
+  // 每个动作配的小特效（灰尘、小星星、音符、BANG! 之类）。改成 false 就全关掉。
+  cuteFx: true,
 
   // ---------- 走开后的位置 ----------
   away: {

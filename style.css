@@ -664,8 +664,6 @@ body {
 @media (max-width: 760px) {
   body { overflow: auto; }
   .deco { height: calc(var(--h) * .6); }
-  /* 窗口竖着排时，说明窗口右上角的贴纸会挤到狗狗窗口右下角那张，挪到说明窗口右下角 */
-  .win-help .deco-tr { top: auto; bottom: 0; translate: 18% 30%; }
   .menubar .menu, .menubar #poseChip { display: none; }
   .desktop {
     position: static; margin-top: var(--bar); padding: 16px 20px 24px 16px;

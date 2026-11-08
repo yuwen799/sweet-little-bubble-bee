@@ -1,1 +1,0 @@
-把四张装饰贴纸放这里：chef.png、hoodie.png、bow.png、dance.png（透明背景，带白边）。位置在 config.js 的 decor 里改。

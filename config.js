@@ -54,9 +54,9 @@ export const CONFIG = {
   // size：高度（像素）；rot：歪多少度；dx / dy：再往外挪多少（像素）
   // 图片放进 assets/stickers/，还没放的会自动不显示
   decor: [
-    { src: 'assets/stickers/chef.png',   win: '.win-dog',  corner: 'tr', size: 130, rot: 9 },
+    { src: 'assets/stickers/chef.png',   win: '.win-dog',  corner: 'tr', size: 130, rot: 9, dy: 34 },
     { src: 'assets/stickers/hoodie.png', win: '.win-dog',  corner: 'br', size: 140, rot: 7 },
-    { src: 'assets/stickers/bow.png',    win: '.win-help', corner: 'tr', size: 92,  rot: -7 },
+    { src: 'assets/stickers/bow.png',    win: '.win-cam',  corner: 'tr', size: 84,  rot: -7 },
     { src: 'assets/stickers/dance.png',  win: '.win-cam',  corner: 'bl', size: 150, rot: -10 },
   ],
 

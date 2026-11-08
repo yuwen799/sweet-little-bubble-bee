@@ -33,6 +33,7 @@ const DEFAULTS = {
   shakeMinAmplitude: 0.03,
   shakeHoldMs: 500,   // 握手：握拳停住多久
   bangMinRise: 0.06,  // 装死：两只手枪往上甩多少
+  bangAimMs: 250,     // 装死：甩之前两只手要停稳多久
   praiseHoldMs: 450,  // 被夸：大拇指停多久
   throwMinDist: 0.1,  // 扔球：松手时手要甩出去多远
   heartHoldMs: 300,   // 比心：停多久
@@ -211,20 +212,23 @@ export class GestureDetector {
     return 'kiss';
   }
 
-  // ⑦ 两只手都比手枪，一起往上甩 → 装死
-  //   以前是单手手枪「瞄准→上甩→停住」，老和食指画圈互相误认（用户真机反馈）。
-  //   改成必须两只手，单手画圈就不可能触发装死了
+  // ⑦ 两只手都比手枪：先瞄准停稳 → 再快速一起往上甩 → 装死
+  //   以前是单手手枪，老和食指画圈互相误认，用户改成双手。
+  //   用户真机反馈：双手刚举起来摆姿势还没甩就装死了 → 现在要求先停稳，再在 300ms 内快速上甩
   detectBang(t) {
-    const run = this.hist.filter((s) => s.t >= t - 500 && GUNS.includes(s.pose) && GUNS.includes(s.oPose));
-    if (run.length < 4) return null;
+    const both = (s) => GUNS.includes(s.pose) && GUNS.includes(s.oPose);
     const last = this.hist[this.hist.length - 1];
-    if (!GUNS.includes(last.pose) || !GUNS.includes(last.oPose)) return null;
+    if (!last || !both(last)) return null;
+    // 瞄准阶段：300ms 之前的那一段，两只手都要停稳
+    const pre = this.hist.filter((s) => s.t < t - 300 && s.t >= t - 300 - this.o.bangAimMs - 200 && both(s));
+    if (pre.length < 5 || pre[pre.length - 1].t - pre[0].t < this.o.bangAimMs) return null;
+    const steady = (pick) => range(pre.map((s) => pick(s).x)) <= 0.04 && range(pre.map((s) => pick(s).y)) <= 0.04;
+    if (!steady((s) => s.tip) || !steady((s) => s.oTip)) return null;
+    // 最近 300ms 内：两只手都从瞄准位置往上甩够距离（y 向下为正，往上 = y 变小）
+    const aim = pre[pre.length - 1];
     const rose = (pick) => {
-      const ys = run.map((s) => pick(s).y);
-      const low = run[ys.indexOf(Math.max(...ys))]; // 甩之前最低的位置
-      const rise = pick(low).y - pick(last).y;      // y 向下为正，往上甩 = y 变小
-      const dx = Math.abs(pick(last).x - pick(low).x);
-      return rise >= this.o.bangMinRise && dx <= rise * 0.8;
+      const rise = pick(aim).y - pick(last).y;
+      return rise >= this.o.bangMinRise && Math.abs(pick(last).x - pick(aim).x) <= rise * 0.8;
     };
     return rose((s) => s.tip) && rose((s) => s.oTip) ? 'dead' : null;
   }

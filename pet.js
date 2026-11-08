@@ -13,7 +13,7 @@ const MEDIA_KEY = {
 // 这些动作狗是站着/动着的，不保留坐、趴等姿势
 const MOVING = ['spin', 'walk', 'run', 'happy', 'praise', 'kiss', 'fetch'];
 // 会一直保持的姿势
-const POSTURES = ['sit', 'dead'];
+const POSTURES = ['sit', 'dead']; // dead 只在装死那 2 秒里用
 
 export class Pet {
   /**
@@ -23,7 +23,7 @@ export class Pet {
   constructor(el, cfg) {
     this.el = el;
     this.cfg = cfg;
-    this.base = 'stand'; // 'stand' | 'sit' | 'dead' | 'away'
+    this.base = 'stand'; // 'stand' | 'sit' | 'away'
     this.busy = false;   // 正在播放一次性的动作（转圈/走开/跑来）
     this.petting = false;
     this.broken = new Set(); // 加载失败的素材
@@ -73,11 +73,9 @@ export class Pet {
         this.play('shake', A.shake?.duration || 1600, () => { this.base = 'sit'; this.render('sit'); });
         return { ok: true };
 
-      case 'dead': // 装死：倒地不动（保持）
+      case 'dead': // 装死：「砰」倒地，躺 2 秒后自己爬起来（用户要求不要一直躺着）
         if (far) return this.tooFar();
-        if (this.base === 'dead') return { ok: true };
-        this.base = 'dead';
-        this.render('dead');
+        this.play('dead', A.playDead?.duration || 2000, () => { this.base = 'stand'; this.render('idle'); });
         return { ok: true };
 
       case 'praise': // 被夸：开心扭一扭，再回到原来的姿势
@@ -191,7 +189,7 @@ export class Pet {
 
   /** 不做动作时该显示的样子 */
   restingAnim() {
-    return { sit: 'sit', dead: 'dead', away: 'away' }[this.base] || 'idle';
+    return { sit: 'sit', away: 'away' }[this.base] || 'idle';
   }
 
   /** 播放一次性动作，结束后调用 done */
@@ -276,8 +274,7 @@ export class Pet {
     h.className = 'heart';
     h.textContent = chars[Math.floor(Math.random() * chars.length)];
     h.style.left = `${30 + Math.random() * 40}%`;
-    // 装死时，爱心从身体中间冒出来
-    h.style.top = this.base === 'dead' ? '40%' : '12%';
+    h.style.top = '12%';
     h.style.setProperty('--drift', `${(Math.random() - 0.5) * 60}px`);
     this.el.hearts.appendChild(h);
     setTimeout(() => h.remove(), 1400);

@@ -156,10 +156,6 @@ body {
 .posture-dead .shadow { opacity: 0; }
 .posture-dead .tail, .posture-dead .body, .posture-dead .ear { animation: none; }
 .posture-dead .cheek { opacity: 0; }
-/* 装死时被摸：偷偷摇尾巴（演技不过关） */
-.posture-dead.st-pet .tail { animation: wag .18s ease-in-out infinite alternate; }
-.posture-dead.st-pet .head { animation: none; }
-.posture-dead.st-pet .eyes-closed { opacity: 0; }
 
 /* ⑧ 被夸：眯眼笑，左右扭屁股，跳一下，冒星星 */
 .dog.st-praise { animation: praise 1.3s ease-in-out 1; }

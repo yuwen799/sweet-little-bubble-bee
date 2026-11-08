@@ -25,7 +25,7 @@ export const CONFIG = {
     come:  { src: '', duration: 1100 },             // ④ 跑过来（同时会自动放大回到面前）
     pet:   { src: '', loop: true },                 // ⑤ 被摸头（手一直摆就一直播）
     shake: { src: '', duration: 1600 },             // ⑥ 握手（坐着伸爪子，握完继续坐着）
-    playDead: { src: '' },                          // ⑦ 装死（播完停在最后一帧）
+    playDead: { src: '', duration: 2000 },          // ⑦ 装死（躺 2 秒后自己爬起来；视频就播到结尾）
     praise: { src: '', duration: 1300 },            // ⑧ 被夸（开心扭一扭）
     fetch: { src: '', duration: 4000 },             // ⑨ 扔球叼回来（一整段：追球→叼回来；留空就用卡通狗演）
     kiss:  { src: '', duration: 1600 },             // ⑩ 亲亲（凑到镜头前舔一下）
@@ -63,7 +63,8 @@ export const CONFIG = {
     shakeSwings: 2,        // 拳头至少上下晃几次
     shakeMinAmplitude: 0.03,
 
-    // ⑦ 两只手都比手枪，一起往上甩（装死）
+    // ⑦ 两只手都比手枪：先停稳瞄准，再一起快速往上甩（装死）
+    bangAimMs: 250,        // 甩之前两只手要停稳多久（毫秒）
     bangMinRise: 0.06,     // 往上甩多少（相对画面高度）
 
     // ⑧ 竖大拇指停住（被夸）

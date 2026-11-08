@@ -12,11 +12,14 @@ const SHAPES = {
   gun:   { ext: [1, 0, 0, 0], thumb: 'out' },
   fist:  { ext: [0, 0, 0, 0], thumb: 'in' },
   thumb: { ext: [0, 0, 0, 0], thumb: 'up' },
+  pinch: { ext: [0, 0, 0, 0], thumb: 'pinch' },
 };
 const THUMB = { // [第一关节 lm3, 指尖 lm4]
   in:  [[-0.03, 0.05], [0.0, 0.04]],
   out: [[-0.08, 0.01], [-0.10, -0.02]],
   up:  [[-0.05, -0.03], [-0.05, -0.07]],
+  pinch: [[-0.08, 0.01], [-0.09, -0.02]],
+  heart: [[-0.01, 0.05], [0.0, 0.04]],
 };
 
 /** 合成 21 个关键点。(cx,cy)=手的位置，s=大小，
@@ -34,7 +37,32 @@ function hand(pose, cx, cy, s = 1, c = 1) {
     if (ext[f]) { lm[b+1] = P(x, -0.01); lm[b+2] = P(x, -0.04); lm[b+3] = P(x, -0.07); }
     else { lm[b+1] = P(x, 0.0); lm[b+2] = P(x, 0.03); lm[b+3] = P(x, 0.05); }
   }
+  // 捏住：食指弯过去，指尖碰到拇指尖
+  if (pose === 'pinch') { lm[6] = P(-0.05, -0.01); lm[7] = P(-0.07, -0.03); lm[8] = P(-0.085, -0.03); }
   return lm;
+}
+
+/** 双手比心：右手 + 镜像出来的左手，两只食指尖碰在 (cx, cy)，两只拇指尖碰在下面 */
+function heartPair(cx, cy, gap = 0) {
+  const right = hand('gun', cx + 0.03 + gap, cy + 0.07);
+  right[3] = { x: cx + 0.02 + gap, y: cy + 0.10, z: 0 };
+  right[4] = { x: cx + gap, y: cy + 0.11, z: 0 }; // 拇指尖在食指尖正下方
+  const left = right.map((p) => ({ x: 2 * cx - p.x, y: p.y, z: 0 }));
+  return [right, left];
+}
+
+/** 两只手的版本：frames(u) 返回 [主手, 另一只手] */
+function run2(frames, ms) {
+  const d = new GestureDetector(CONFIG.gestures);
+  const got = [];
+  const n = Math.round(ms / 33);
+  for (let i = 0; i <= n; i++) {
+    const t = 1000 + i * 33;
+    const [a, b] = frames(i / n);
+    const out = d.update(a, t, 'Right', b);
+    if (out.gesture) got.push(out.gesture);
+  }
+  return got;
 }
 // 让食指尖（而不是手腕）落在 (tx,ty)
 const at = (pose, tx, ty, s = 1, c = 1) => hand(pose, tx + 0.03 * s * c, ty + 0.07 * s, s, c);
@@ -84,6 +112,15 @@ const cases = [
   ['praise 竖拇指停住', 'praise', () => run(() => at('thumb', .5, .5), 800)],
   ['praise 停 3 秒只触发一次', 'praise', () => run(() => at('thumb', .5, .5), 3000), 1],
 
+  ['fetch 捏住→松手往上甩', 'fetch', () => run(u => u < .5 ? at('pinch', .5, .6) : at('open', .5, .6 - .2*ease(u, .5, .65)), 1000)],
+  ['fetch 捏住→松手往旁边甩', 'fetch', () => run(u => u < .5 ? at('pinch', .4, .5) : at('open', .4 + .2*ease(u, .5, .65), .5), 1000)],
+  ['kiss  双手比心', 'kiss', () => run2(() => heartPair(.5, .45), 1000)],
+  ['kiss  比心 3 秒只触发一次', 'kiss', () => run2(() => heartPair(.5, .45), 3000), 1],
+  ['--    捏住不动', null, () => run(() => at('pinch', .5, .5), 1500)],
+  ['--    捏住后原地松开', null, () => run(u => u < .5 ? at('pinch', .5, .5) : at('open', .5, .5), 1200)],
+  ['--    捏着移动不松手', null, () => run(u => at('pinch', .4 + .2*u, .5), 800)],
+  ['--    双手分开不算比心', null, () => run2(() => heartPair(.5, .45, .08), 1500)],
+  ['--    只有一只手', null, () => run2(() => [heartPair(.5, .45)[0], null], 1500)],
   ['--    右手 手心翻到手背', null, () => run(u => at('open', .5, .5, 1, Math.cos(ease(u, .3, .8)*Math.PI)), 900)],
   ['--    左手 手心翻到手背', null, () => run(u => at('open', .5, .5, 1, -Math.cos(ease(u, .3, .8)*Math.PI)), 900, 'Left')],
   ['--    手掌上下抖(张开手)', null, () => run(u => at('open', .5, .5 + .06*wave(u, 2)), 1400)],

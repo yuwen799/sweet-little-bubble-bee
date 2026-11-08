@@ -9,10 +9,11 @@ const HAND_MODEL =
   'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
 
 const $ = (id) => document.getElementById(id);
-const ACTIONS = ['spin', 'sit', 'leave', 'come', 'pet', 'roll', 'shake', 'dead', 'lie', 'praise'];
+const ACTIONS = ['spin', 'sit', 'leave', 'come', 'pet', 'roll', 'shake', 'dead', 'lie', 'praise', 'fetch', 'kiss'];
+const KEYS = '1234567890-='; // 和 ACTIONS 一一对应
 
 const pet = new Pet(
-  { stage: $('stage'), wrap: $('petWrap'), dog: $('dog'), video: $('petVideo'), img: $('petImg'), hearts: $('hearts') },
+  { stage: $('stage'), wrap: $('petWrap'), dog: $('dog'), video: $('petVideo'), img: $('petImg'), hearts: $('hearts'), ball: $('ball') },
   CONFIG,
 );
 const detector = new GestureDetector(CONFIG.gestures);
@@ -44,9 +45,9 @@ function toast(msg) {
   toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
-// 键盘 1–5 / 点击说明条目（没有摄像头时测试用）
+// 键盘 1–9、0、-、= / 点击说明条目（没有摄像头时测试用）
 document.addEventListener('keydown', (e) => {
-  const i = '1234567890'.indexOf(e.key);
+  const i = KEYS.indexOf(e.key);
   if (i >= 0) trigger(ACTIONS[i], { hold: 1600 });
 });
 document.querySelectorAll('.guide li').forEach((li) => {
@@ -68,7 +69,7 @@ async function createLandmarker() {
     HandLandmarker.createFromOptions(fileset, {
       baseOptions: { modelAssetPath: HAND_MODEL, delegate },
       runningMode: 'VIDEO',
-      numHands: 1,
+      numHands: 2, // 双手比心要同时看两只手
     });
   try {
     return await make('GPU');
@@ -91,7 +92,7 @@ async function startCamera() {
     await cam.play();
   } catch (e) {
     const why = e && e.name === 'NotAllowedError' ? '没有摄像头权限' : '摄像头打不开';
-    setStatus(`⚠️ ${why}（可以先用键盘 1–9、0 试）`);
+    setStatus(`⚠️ ${why}（可以先用键盘 1–9、0、-、= 试）`);
     btn.disabled = false;
     return;
   }
@@ -112,6 +113,7 @@ async function startCamera() {
 }
 
 let lastVideoTime = -1;
+let lastWrist = null;
 function loop() {
   requestAnimationFrame(loop);
   if (cam.readyState < 2 || cam.currentTime === lastVideoTime) return;
@@ -119,17 +121,25 @@ function loop() {
 
   const now = performance.now();
   const res = landmarker.detectForVideo(cam, now);
-  const raw = res.landmarks && res.landmarks[0];
   // 镜像：让“往右”就是你看到的往右
-  const lm = raw ? raw.map((p) => ({ x: 1 - p.x, y: p.y, z: p.z })) : null;
+  const hands = (res.landmarks || []).map((h) => h.map((p) => ({ x: 1 - p.x, y: p.y, z: p.z })));
+  // 两只手都在画面里时，单手手势一直跟着同一只手（离上一帧主手最近的那只），不来回跳
+  let main = 0;
+  if (hands.length > 1 && lastWrist) {
+    const d = (h) => Math.hypot(h[0].x - lastWrist.x, h[0].y - lastWrist.y);
+    main = d(hands[1]) < d(hands[0]) ? 1 : 0;
+  }
+  const lm = hands[main] || null;
+  const other = hands[1 - main] || null;
+  lastWrist = lm ? lm[0] : null;
 
   // 左右手：MediaPipe 默认画面是镜像过的，我们给的是摄像头原始画面，所以它说的左右是反的
-  const label = res.handedness?.[0]?.[0]?.categoryName || null;
+  const label = res.handedness?.[main]?.[0]?.categoryName || null;
   let hand = label;
   if (label && CONFIG.gestures.handednessSwap !== false) hand = label === 'Left' ? 'Right' : 'Left';
 
-  const out = detector.update(lm, now, hand);
-  drawHand(lm, out.pose);
+  const out = detector.update(lm, now, hand, other);
+  drawHands(hands, main, out.pose);
   let poseText = out.pose ? POSE_LABEL[out.pose] : '没看到手';
   if (out.pose === 'open' && out.palmSide) poseText += out.palmSide === 1 ? '（手心）' : '（手背）';
   $('poseChip').textContent = `手势：${poseText}`;
@@ -146,13 +156,16 @@ const BONES = [
   [13, 17], [17, 18], [18, 19], [19, 20], [0, 17],
 ];
 
-function drawHand(lm, pose) {
+function drawHands(hands, main, pose) {
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
+  hands.forEach((lm, k) => drawHand(lm, k === main ? pose : 'other', k === main));
+}
+
+function drawHand(lm, pose, isMain) {
   const w = overlay.width;
   const h = overlay.height;
-  ctx.clearRect(0, 0, w, h);
-  if (!lm) return;
   ctx.lineWidth = 3;
-  ctx.strokeStyle = 'rgba(255, 220, 170, .9)';
+  ctx.strokeStyle = isMain ? 'rgba(255, 220, 170, .9)' : 'rgba(255, 255, 255, .6)';
   ctx.beginPath();
   for (const [a, b] of BONES) {
     ctx.moveTo(lm[a].x * w, lm[a].y * h);

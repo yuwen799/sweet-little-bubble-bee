@@ -1,7 +1,7 @@
 // ============================================================
 //  手势识别：输入 MediaPipe 的 21 个手部关键点，输出动作名
 //  动作名：'spin' | 'sit' | 'leave' | 'come' | 'pet' | 'roll'
-//         | 'shake' | 'dead' | 'lie' | 'praise'
+//         | 'shake' | 'dead' | 'lie' | 'praise' | 'fetch' | 'kiss'
 //  关键点坐标需要已经左右镜像（x = 1 - x），和用户看到的方向一致。
 // ============================================================
 
@@ -15,6 +15,7 @@ export const POSE_LABEL = {
   open: '🖐 张开手掌',
   fist: '✊ 握拳',
   thumb: '👍 大拇指',
+  pinch: '🤏 捏住',
   other: '🤚 其他',
 };
 
@@ -36,6 +37,8 @@ const DEFAULTS = {
   bangSettleMs: 150, // 装死：甩完要停住多久（确认不是在画圈）
   lieHoldMs: 700,   // 趴下：握拳停多久
   praiseHoldMs: 450, // 被夸：大拇指停多久
+  throwMinDist: 0.1, // 扔球：松手时手要甩出去多远
+  heartHoldMs: 300,  // 比心：停多久
 };
 
 // 距离带上 z（深度），手指对着摄像头时也不容易误判成弯曲
@@ -84,8 +87,15 @@ export function thumbState(lm) {
   return { out, up };
 }
 
+/** 是否捏住：拇指尖和食指尖碰在一起，而且食指尖没有缩进掌心（排除握拳） */
+export function isPinch(lm) {
+  const size = dist(lm[0], lm[9]) || 1;
+  return dist(lm[4], lm[8]) < size * 0.3 && dist(lm[8], lm[0]) > dist(lm[5], lm[0]) * 1.1;
+}
+
 /** 判断手型 */
 export function classifyPose(lm) {
+  if (isPinch(lm)) return 'pinch';
   const [i, m, r, p] = fingerStates(lm);
   if (i && m && r && p) return 'open';
   if (i && m && !r && !p) return 'two';
@@ -115,13 +125,16 @@ export class GestureDetector {
    * @param lm  21 个关键点（已镜像），没看到手传 null
    * @param t   当前时间（毫秒）
    * @param hand 真实的左右手 'Right' | 'Left'（不知道就传 null，按右手算）
+   * @param other 另一只手的 21 个关键点（已镜像），没有就传 null。只有双手比心用到
    * @returns {{pose: string|null, gesture: string|null, palmSide: number}}
    *          palmSide：1 = 手心朝屏幕，-1 = 手背朝屏幕，0 = 侧着/看不清
    */
-  update(lm, t, hand = null) {
+  update(lm, t, hand = null, other = null) {
     if (!lm) {
       this.hist = [];
       this.holdLock = null;
+      this.heartStart = null;
+      this.heartLock = false;
       return { pose: null, gesture: null, palmSide: 0 };
     }
     const pose = classifyPose(lm);
@@ -143,10 +156,12 @@ export class GestureDetector {
     this.hist.push({ t, pose, tip: { x: lm[8].x, y: lm[8].y }, tip2: mid(lm[8], lm[12]), palm, size, facing, palmSide });
     while (this.hist.length && this.hist[0].t < t - 2000) this.hist.shift();
 
+    const heart = this.trackHeart(lm, other, t);
+
     if (t < this.freshUntil) this.hist = this.hist.slice(-1);
     if (t < this.cooldownUntil) return { pose, gesture: null, palmSide };
 
-    const g = this.detectCircle(t) || this.detectBang(t) || this.detectSwipe(t) || this.detectSit(t) ||
+    const g = heart || this.detectThrow(t) || this.detectCircle(t) || this.detectBang(t) || this.detectSwipe(t) || this.detectSit(t) ||
       this.detectFlip(t) || this.detectPull(t) || this.detectShake(t) || this.detectPet(t) ||
       this.detectHold(t, 'fist', this.o.lieHoldMs, 'lie') ||
       this.detectHold(t, 'thumb', this.o.praiseHoldMs, 'praise');
@@ -176,6 +191,45 @@ export class GestureDetector {
       else if (++miss > 2) break;
     }
     return out.reverse();
+  }
+
+  // ⑫ 双手比心：两只食指尖碰在一起、两只拇指尖碰在一起，停一下 → 亲亲。一直比着只触发一次
+  trackHeart(a, b, t) {
+    const size = dist2d(a[0], a[9]) || 1;
+    const ok = !!b &&
+      dist2d(a[0], b[0]) > size * 0.5 &&      // 确实是两只不同的手（两个手腕分开）
+      dist2d(a[8], b[8]) < size * 0.5 &&      // 食指尖碰在一起
+      dist2d(a[4], b[4]) < size * 0.5;        // 拇指尖碰在一起
+    if (!ok) {
+      this.heartStart = null;
+      this.heartLock = false;
+      return null;
+    }
+    if (this.heartStart == null) this.heartStart = t;
+    if (this.heartLock || t - this.heartStart < this.o.heartHoldMs || t < this.cooldownUntil) return null;
+    this.heartLock = true;
+    return 'kiss';
+  }
+
+  // ⑪ 捏住（像捏着球）→ 松手的同时往外甩 → 扔球
+  detectThrow(t) {
+    const h = this.hist;
+    const last = h[h.length - 1];
+    if (!last || last.pose === 'pinch') return null;
+    // 找最近一次“捏住”的最后一帧，要在 300ms 内刚松开
+    let k = h.length - 2;
+    while (k >= 0 && h[k].pose !== 'pinch' && h[k].t >= t - 300) k--;
+    if (k < 0 || h[k].pose !== 'pinch' || h[k].t < t - 300) return null;
+    const release = h[k];
+    // 之前要捏住一小会儿（≥150ms）
+    let j = k;
+    while (j > 0 && h[j - 1].pose === 'pinch') j--;
+    if (release.t - h[j].t < 150) return null;
+    // 松手前后这一小段，手要甩出去够远
+    const from = h.filter((s) => s.t >= release.t - 150 && s.t <= release.t);
+    const start = from[0].palm;
+    const moved = Math.hypot(last.palm.x - start.x, last.palm.y - start.y);
+    return moved >= this.o.throwMinDist ? 'fetch' : null;
   }
 
   // ① 食指画圈 → 转圈（单指、手枪都行）

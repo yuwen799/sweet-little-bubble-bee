@@ -7,16 +7,17 @@ const MEDIA_KEY = {
   idle: 'idle', spin: 'spin', sit: 'sit', walk: 'leave',
   away: 'away', run: 'come', happy: 'come', pet: 'pet', roll: 'roll',
   shake: 'shake', dead: 'playDead', lie: 'lie', praise: 'praise',
+  fetch: 'fetch', kiss: 'kiss',
 };
 
 // 这些动作狗是站着/动着的，不保留坐、趴等姿势
-const MOVING = ['spin', 'walk', 'run', 'happy', 'praise'];
+const MOVING = ['spin', 'walk', 'run', 'happy', 'praise', 'kiss', 'fetch'];
 // 会一直保持的姿势
 const POSTURES = ['sit', 'roll', 'lie', 'dead'];
 
 export class Pet {
   /**
-   * @param el  { stage, wrap, dog, video, img, hearts }
+   * @param el  { stage, wrap, dog, video, img, hearts, ball }
    * @param cfg CONFIG
    */
   constructor(el, cfg) {
@@ -98,6 +99,18 @@ export class Pet {
         for (let k = 0; k < 5; k++) setTimeout(() => this.spawnHeart(['✨', '⭐', '🌟'], true), k * 180);
         return { ok: true };
 
+      case 'fetch': // 扔球：球飞出去 → 狗追过去 → 叼回来 → 放在你面前
+        if (far) return this.tooFar();
+        this.fetch();
+        return { ok: true };
+
+      case 'kiss': // 亲亲：凑到屏幕前舔一下，冒大爱心
+        if (far) return this.tooFar();
+        this.play('kiss', A.kiss?.duration || 1600, () => this.render(this.restingAnim()));
+        this.bigHeart();
+        for (let k = 0; k < 8; k++) setTimeout(() => this.spawnHeart(undefined, true), k * 120);
+        return { ok: true };
+
       case 'leave': {
         if (far) return { ok: false, msg: `${this.name}已经走开啦，手掌往回收叫它回来` };
         const dur = A.leave.duration || 2200;
@@ -128,6 +141,55 @@ export class Pet {
         return { ok: true };
     }
     return { ok: false };
+  }
+
+  /** 扔球的整套动作。有 fetch 素材就直接播素材；没有就用卡通狗演一遍 */
+  fetch() {
+    const A = this.cfg.actions;
+    if (A.fetch?.src && !this.broken.has('fetch')) {
+      this.play('fetch', A.fetch.duration || 4000, () => { this.base = 'stand'; this.render('idle'); });
+      return;
+    }
+    const { stage, ball } = this.el;
+    this.busy = true;
+    const at = (ms, fn) => setTimeout(fn, ms);
+    const throwBall = () => { ball.className = 'ball'; void ball.offsetWidth; ball.className = 'ball flying'; };
+    throwBall();
+    // 狗转身追过去
+    at(250, () => {
+      stage.style.setProperty('--move-dur', '850ms');
+      stage.classList.add('away');
+      this.render('walk');
+    });
+    // 追到了：球消失，叼在嘴里往回跑
+    at(1150, () => {
+      ball.className = 'ball';
+      this.hasBall = true;
+      stage.style.setProperty('--move-dur', '900ms');
+      stage.classList.remove('away');
+      this.render('run');
+    });
+    // 跑回来了：叼着球开心跳
+    at(2100, () => this.render('happy'));
+    // 把球放在你面前
+    at(3000, () => {
+      this.hasBall = false;
+      ball.className = 'ball dropped';
+      this.base = 'stand';
+      this.busy = false;
+      this.render('idle');
+      for (let k = 0; k < 4; k++) setTimeout(() => this.spawnHeart(undefined, true), k * 150);
+    });
+    at(5000, () => { if (ball.className === 'ball dropped') ball.className = 'ball'; });
+  }
+
+  /** 屏幕中间冒出一颗大爱心 */
+  bigHeart() {
+    const h = document.createElement('div');
+    h.className = 'big-heart';
+    h.textContent = '💗';
+    document.body.appendChild(h);
+    setTimeout(() => h.remove(), 1500);
   }
 
   tooFar() {
@@ -186,7 +248,7 @@ export class Pet {
     if (anim === 'sit' || anim === 'away' || anim === 'shake') posture = 'sit';
     else if (POSTURES.includes(anim)) posture = anim;
     else if (!MOVING.includes(anim) && POSTURES.includes(this.base)) posture = this.base;
-    dog.className = `dog posture-${posture} st-${anim}`;
+    dog.className = `dog posture-${posture} st-${anim}${this.hasBall ? ' has-ball' : ''}`;
     // 翻肚皮/装死时狗是转过来的，影子改由外层画
     this.el.wrap.classList.toggle('rolled', posture === 'roll' || posture === 'dead');
     // 让 CSS 动画每次都从头播

@@ -77,6 +77,10 @@
               <ellipse cx="150" cy="137" rx="11" ry="8" fill="#2B1D14"/>
               <path d="M150 145 L150 153 M150 153 Q141 162 133 155 M150 153 Q159 162 167 155"
                     fill="none" stroke="#2B1D14" stroke-width="3.5" stroke-linecap="round"/>
+              <g class="mouth-ball">
+                <circle cx="150" cy="162" r="18" fill="#D7E94B" stroke="#B5C93A" stroke-width="2"/>
+                <path d="M134 154 Q150 166 166 154" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+              </g>
             </g>
           </g>
         </svg>
@@ -84,6 +88,14 @@
 
       <video id="petVideo" class="pet-media" playsinline muted hidden></video>
       <img id="petImg" class="pet-media" alt="" hidden>
+    </div>
+
+    <!-- 扔出去的网球 -->
+    <div id="ball" class="ball" aria-hidden="true">
+      <svg viewBox="0 0 40 40">
+        <circle cx="20" cy="20" r="18" fill="#D7E94B" stroke="#B5C93A" stroke-width="1.5"/>
+        <path d="M6 12 Q20 22 6 30 M34 10 Q20 20 34 30" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+      </svg>
     </div>
   </main>
 
@@ -106,8 +118,10 @@
       <li data-action="dead"><span class="ico">👉</span><span class="how">手枪瞄准·上甩·停</span><span class="what">装死</span><kbd>8</kbd></li>
       <li data-action="lie"><span class="ico">✊</span><span class="how">握拳停住</span><span class="what">趴下</span><kbd>9</kbd></li>
       <li data-action="praise"><span class="ico">👍</span><span class="how">竖大拇指停住</span><span class="what">被夸</span><kbd>0</kbd></li>
+      <li data-action="fetch"><span class="ico">🤏</span><span class="how">捏住，松手往外甩</span><span class="what">扔球</span><kbd>-</kbd></li>
+      <li data-action="kiss"><span class="ico">🫶</span><span class="how">双手比心</span><span class="what">亲亲</span><kbd>=</kbd></li>
     </ol>
-    <p class="hint">翻肚皮时再左右摆手 = 揉肚皮。没有摄像头？点条目或按键盘 1–9、0 也能试。</p>
+    <p class="hint">翻肚皮时再左右摆手 = 揉肚皮。没有摄像头？点条目或按键盘 1–9、0、-、= 也能试。</p>
   </aside>
 
   <div id="camBox" class="cam off">

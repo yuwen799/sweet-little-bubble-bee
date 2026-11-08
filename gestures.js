@@ -46,7 +46,9 @@ const dist2d = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const flipped = (run) => run.some((s) => s.facing === 1) && run.some((s) => s.facing === -1);
 const mid = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
 const range = (arr) => Math.max(...arr) - Math.min(...arr);
-const GUNS = ['gun', 'point']; // 双手手枪时拇指不一定看得清，单指也算
+const GUNS = ['gun', 'point']; // 拇指不一定看得清，单指也算手枪
+// 双手装死时允许的手型：食指对着摄像头时常被看成「竖拇指」（用户真机反馈），所以也算上
+const BANG_POSES = ['gun', 'point', 'thumb'];
 
 /** 数来回摆动的“掉头”次数：往一个方向走够 amp 后又往回走够 amp，算一次 */
 function countSwings(vals, amp) {
@@ -165,7 +167,7 @@ export class GestureDetector {
       this.detectSwipe(t) || this.detectSit(t) || this.detectPull(t) || this.detectShake(t) ||
       this.detectPet(t) ||
       this.detectHold(t, 'fist', this.o.shakeHoldMs, 'shake') ||
-      this.detectHold(t, 'thumb', this.o.praiseHoldMs, 'praise');
+      this.detectHold(t, 'thumb', this.o.praiseHoldMs, 'praise', true);
     if (g) {
       if (g === 'pet') {
         this.cooldownUntil = t + this.o.petRepeat;
@@ -216,7 +218,7 @@ export class GestureDetector {
   //   以前是单手手枪，老和食指画圈互相误认，用户改成双手。
   //   用户真机反馈：双手刚举起来摆姿势还没甩就装死了 → 现在要求先停稳，再在 300ms 内快速上甩
   detectBang(t) {
-    const both = (s) => GUNS.includes(s.pose) && GUNS.includes(s.oPose);
+    const both = (s) => BANG_POSES.includes(s.pose) && BANG_POSES.includes(s.oPose);
     const last = this.hist[this.hist.length - 1];
     if (!last || !both(last)) return null;
     // 瞄准阶段：300ms 之前的那一段，两只手都要停稳
@@ -340,10 +342,12 @@ export class GestureDetector {
   }
 
   // 停住类：握拳停住 → 握手；竖大拇指停住 → 被夸。一直停着只触发一次
-  detectHold(t, pose, ms, gesture) {
+  //   singleHand：另一只手在比手枪/竖拇指时不算（用户真机反馈：双手比枪时偶尔被认成竖拇指 → 误触发被夸）
+  detectHold(t, pose, ms, gesture, singleHand = false) {
     if (this.holdLock === pose) return null;
     const run = this.recentRun(pose, ms + 400, t);
     if (run.length < 4 || run[run.length - 1].t - run[0].t < ms) return null;
+    if (singleHand && run.some((s) => BANG_POSES.includes(s.oPose))) return null;
     const recent = run.filter((s) => s.t >= t - ms);
     if (range(recent.map((s) => s.palm.x)) > 0.05 || range(recent.map((s) => s.palm.y)) > 0.05) return null;
     this.holdLock = pose;

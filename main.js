@@ -9,8 +9,8 @@ const HAND_MODEL =
   'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
 
 const $ = (id) => document.getElementById(id);
-const ACTIONS = ['spin', 'sit', 'leave', 'come', 'pet', 'roll', 'shake', 'dead', 'lie', 'praise', 'fetch', 'kiss'];
-const KEYS = '1234567890-='; // 和 ACTIONS 一一对应
+const ACTIONS = ['spin', 'sit', 'leave', 'come', 'pet', 'shake', 'dead', 'praise', 'fetch', 'kiss'];
+const KEYS = '1234567890'; // 和 ACTIONS 一一对应
 
 const pet = new Pet(
   { stage: $('stage'), wrap: $('petWrap'), dog: $('dog'), video: $('petVideo'), img: $('petImg'), hearts: $('hearts'), ball: $('ball') },
@@ -45,7 +45,7 @@ function toast(msg) {
   toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
-// 键盘 1–9、0、-、= / 点击说明条目（没有摄像头时测试用）
+// 键盘 1–9、0 / 点击说明条目（没有摄像头时测试用）
 document.addEventListener('keydown', (e) => {
   const i = KEYS.indexOf(e.key);
   if (i >= 0) trigger(ACTIONS[i], { hold: 1600 });
@@ -92,7 +92,7 @@ async function startCamera() {
     await cam.play();
   } catch (e) {
     const why = e && e.name === 'NotAllowedError' ? '没有摄像头权限' : '摄像头打不开';
-    setStatus(`⚠️ ${why}（可以先用键盘 1–9、0、-、= 试）`);
+    setStatus(`⚠️ ${why}（可以先用键盘 1–9、0 试）`);
     btn.disabled = false;
     return;
   }
@@ -133,16 +133,9 @@ function loop() {
   const other = hands[1 - main] || null;
   lastWrist = lm ? lm[0] : null;
 
-  // 左右手：MediaPipe 默认画面是镜像过的，我们给的是摄像头原始画面，所以它说的左右是反的
-  const label = res.handedness?.[main]?.[0]?.categoryName || null;
-  let hand = label;
-  if (label && CONFIG.gestures.handednessSwap !== false) hand = label === 'Left' ? 'Right' : 'Left';
-
-  const out = detector.update(lm, now, hand, other);
+  const out = detector.update(lm, now, other);
   drawHands(hands, main, out.pose);
-  let poseText = out.pose ? POSE_LABEL[out.pose] : '没看到手';
-  if (out.pose === 'open' && out.palmSide) poseText += out.palmSide === 1 ? '（手心）' : '（手背）';
-  $('poseChip').textContent = `手势：${poseText}`;
+  $('poseChip').textContent = `手势：${out.pose ? POSE_LABEL[out.pose] : '没看到手'}${other ? '（两只手）' : ''}`;
   // 「手掌往回收」只用来把走远的狗叫回来；狗在面前时忽略，免得误触发
   if (out.gesture === 'come' && pet.base !== 'away') return;
   if (out.gesture) trigger(out.gesture);

@@ -120,31 +120,16 @@ body {
 @keyframes tilt { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }
 @keyframes tilt-sit { from { transform: translateY(14px) rotate(-7deg); } to { transform: translateY(14px) rotate(7deg); } }
 
-/* ⑥ 翻肚皮：躺倒、四脚朝天乱蹬；这时被摸 = 揉肚皮 */
+/* 装死时狗转过来侧躺，用外层的影子 */
 .dog { transition: transform .4s ease-out; }
-.dog.posture-roll { transform: rotate(180deg) translateY(-8%); }
-.dog.st-roll { animation: flop .75s cubic-bezier(.3, 1.4, .5, 1) 1; }
-@keyframes flop {
-  0% { transform: rotate(0) translateY(0); }
-  30% { transform: rotate(-35deg) translateY(4%); }
-  100% { transform: rotate(180deg) translateY(-8%); }
-}
-.posture-roll .shadow { opacity: 0; }
-.posture-roll .tongue { opacity: 1; }
-.posture-roll .leg-l { animation: paddle .35s ease-in-out infinite alternate; }
-.posture-roll .leg-r { animation: paddle .35s ease-in-out infinite alternate-reverse; }
-.posture-roll.st-pet .leg-l, .posture-roll.st-pet .leg-r { animation-duration: .16s; }
-.posture-roll .body { animation: wiggle .6s ease-in-out infinite alternate; transform-origin: 50% 50%; }
-@keyframes paddle { from { transform: translateY(0) rotate(-6deg); } to { transform: translateY(-12px) rotate(6deg); } }
-@keyframes wiggle { from { transform: rotate(-2deg); } to { transform: rotate(2deg); } }
 .pet-wrap::before {
   content: ""; position: absolute; left: 22%; right: 22%; bottom: 1%; height: 6%;
   border-radius: 50%; background: rgba(90, 55, 20, .18);
   opacity: 0; transition: opacity .3s;
 }
-.pet-wrap.rolled::before { opacity: 1; }
+.pet-wrap.lying::before { opacity: 1; }
 
-/* ⑦ 握手：坐着抬起右爪，上下晃两下 */
+/* ⑥ 握手：坐着抬起右爪，上下晃两下 */
 .st-shake .leg-r { transform-origin: 50% 0%; animation: shakePaw 1.6s ease-in-out 1; }
 .st-shake .head { animation: tilt-sit .4s ease-in-out 4 alternate; }
 .st-shake .tongue { opacity: 1; }
@@ -157,7 +142,7 @@ body {
   82% { transform: translateY(-46px) rotate(-104deg); }
 }
 
-/* ⑧ 装死：「砰」一下往后一仰，侧躺倒地，眼睛变 ×，一动不动 */
+/* ⑦ 装死：「砰」一下往后一仰，侧躺倒地，眼睛变 ×，一动不动 */
 .eyes-x { opacity: 0; }
 .dog.posture-dead { transform: rotate(90deg) translateX(17%); }
 .dog.st-dead { animation: bang .9s cubic-bezier(.4, 1.5, .55, 1) 1; }
@@ -176,19 +161,7 @@ body {
 .posture-dead.st-pet .head { animation: none; }
 .posture-dead.st-pet .eyes-closed { opacity: 0; }
 
-/* ⑨ 趴下：身子压低、头放低、前爪往两边摊开 */
-.posture-lie .body { transform: translateY(26px) scaleY(.7) scaleX(1.1); animation: none; }
-.posture-lie .haunch { opacity: 1; }
-.posture-lie .head { transform: translateY(46px); }
-.posture-lie .leg-l { transform: translate(-14px, 22px) scaleY(.5) rotate(18deg); }
-.posture-lie .leg-r { transform: translate(14px, 22px) scaleY(.5) rotate(-18deg); }
-.posture-lie .tail { animation-duration: 1.2s; }
-.st-lie .head { animation: lieDown .5s ease-out 1; }
-@keyframes lieDown { 0% { transform: translateY(0); } 70% { transform: translateY(52px); } 100% { transform: translateY(46px); } }
-.posture-lie.st-pet .head { animation-name: tilt-lie; }
-@keyframes tilt-lie { from { transform: translateY(46px) rotate(-7deg); } to { transform: translateY(46px) rotate(7deg); } }
-
-/* ⑩ 被夸：眯眼笑，左右扭屁股，跳一下，冒星星 */
+/* ⑧ 被夸：眯眼笑，左右扭屁股，跳一下，冒星星 */
 .dog.st-praise { animation: praise 1.3s ease-in-out 1; }
 .st-praise .eyes-open { opacity: 0; animation: none; }
 .st-praise .eyes-closed, .st-praise .tongue { opacity: 1; }
@@ -203,7 +176,7 @@ body {
   75% { transform: rotate(0) translateY(0); }
 }
 
-/* ⑪ 扔球：球飞到远处 → 狗叼回来 → 放在你面前 */
+/* ⑨ 扔球：球飞到远处 → 狗叼回来 → 放在你面前 */
 .ball {
   position: absolute; left: 50%; bottom: 8vh; z-index: 3;
   width: min(7vh, 10vw); aspect-ratio: 1;
@@ -229,7 +202,7 @@ body {
 .has-ball .mouth-ball { opacity: 1; }
 .has-ball .tongue { opacity: 0 !important; }
 
-/* ⑫ 亲亲：凑到屏幕跟前舔一下 */
+/* ⑩ 亲亲：凑到屏幕跟前舔一下 */
 .dog.st-kiss { animation: kiss 1.6s ease-in-out 1; }
 @keyframes kiss {
   0%, 100% { transform: scale(1) translateY(0); }

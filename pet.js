@@ -5,15 +5,15 @@
 // 显示用的动画名 → config.actions 里的素材名
 const MEDIA_KEY = {
   idle: 'idle', spin: 'spin', sit: 'sit', walk: 'leave',
-  away: 'away', run: 'come', happy: 'come', pet: 'pet', roll: 'roll',
-  shake: 'shake', dead: 'playDead', lie: 'lie', praise: 'praise',
+  away: 'away', run: 'come', happy: 'come', pet: 'pet',
+  shake: 'shake', dead: 'playDead', praise: 'praise',
   fetch: 'fetch', kiss: 'kiss',
 };
 
 // 这些动作狗是站着/动着的，不保留坐、趴等姿势
 const MOVING = ['spin', 'walk', 'run', 'happy', 'praise', 'kiss', 'fetch'];
 // 会一直保持的姿势
-const POSTURES = ['sit', 'roll', 'lie', 'dead'];
+const POSTURES = ['sit', 'dead'];
 
 export class Pet {
   /**
@@ -23,7 +23,7 @@ export class Pet {
   constructor(el, cfg) {
     this.el = el;
     this.cfg = cfg;
-    this.base = 'stand'; // 'stand' | 'sit' | 'roll' | 'lie' | 'dead' | 'away'
+    this.base = 'stand'; // 'stand' | 'sit' | 'dead' | 'away'
     this.busy = false;   // 正在播放一次性的动作（转圈/走开/跑来）
     this.petting = false;
     this.broken = new Set(); // 加载失败的素材
@@ -68,13 +68,6 @@ export class Pet {
         this.render('sit');
         return { ok: true };
 
-      case 'roll':
-        if (far) return this.tooFar();
-        if (this.base === 'roll') return { ok: true };
-        this.base = 'roll';
-        this.render('roll');
-        return { ok: true };
-
       case 'shake': // 握手：坐着抬爪子，握完继续坐着
         if (far) return this.tooFar();
         this.play('shake', A.shake?.duration || 1600, () => { this.base = 'sit'; this.render('sit'); });
@@ -85,13 +78,6 @@ export class Pet {
         if (this.base === 'dead') return { ok: true };
         this.base = 'dead';
         this.render('dead');
-        return { ok: true };
-
-      case 'lie': // 趴下（保持）
-        if (far) return this.tooFar();
-        if (this.base === 'lie') return { ok: true };
-        this.base = 'lie';
-        this.render('lie');
         return { ok: true };
 
       case 'praise': // 被夸：开心扭一扭，再回到原来的姿势
@@ -205,7 +191,7 @@ export class Pet {
 
   /** 不做动作时该显示的样子 */
   restingAnim() {
-    return { sit: 'sit', roll: 'roll', lie: 'lie', dead: 'dead', away: 'away' }[this.base] || 'idle';
+    return { sit: 'sit', dead: 'dead', away: 'away' }[this.base] || 'idle';
   }
 
   /** 播放一次性动作，结束后调用 done */
@@ -235,8 +221,6 @@ export class Pet {
     const A = this.cfg.actions;
     let key = MEDIA_KEY[anim];
     if (key === 'away' && (!A.away?.src || this.broken.has('away'))) key = 'idle';
-    // 翻肚皮时被摸 = 揉肚皮；没有专门的素材就用摸头的
-    if (anim === 'pet' && this.base === 'roll' && A.bellyRub?.src && !this.broken.has('bellyRub')) key = 'bellyRub';
     const src = A[key]?.src || '';
     return { key, src: this.broken.has(key) ? '' : src };
   }
@@ -249,8 +233,8 @@ export class Pet {
     else if (POSTURES.includes(anim)) posture = anim;
     else if (!MOVING.includes(anim) && POSTURES.includes(this.base)) posture = this.base;
     dog.className = `dog posture-${posture} st-${anim}${this.hasBall ? ' has-ball' : ''}`;
-    // 翻肚皮/装死时狗是转过来的，影子改由外层画
-    this.el.wrap.classList.toggle('rolled', posture === 'roll' || posture === 'dead');
+    // 装死时狗是侧躺转过来的，影子改由外层画
+    this.el.wrap.classList.toggle('lying', posture === 'dead');
     // 让 CSS 动画每次都从头播
     void dog.offsetWidth;
 
@@ -292,8 +276,8 @@ export class Pet {
     h.className = 'heart';
     h.textContent = chars[Math.floor(Math.random() * chars.length)];
     h.style.left = `${30 + Math.random() * 40}%`;
-    // 翻肚皮、趴着、装死时，爱心从身体中间冒出来
-    h.style.top = { roll: '42%', lie: '34%', dead: '40%' }[this.base] || '12%';
+    // 装死时，爱心从身体中间冒出来
+    h.style.top = this.base === 'dead' ? '40%' : '12%';
     h.style.setProperty('--drift', `${(Math.random() - 0.5) * 60}px`);
     this.el.hearts.appendChild(h);
     setTimeout(() => h.remove(), 1400);

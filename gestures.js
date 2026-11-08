@@ -1,7 +1,7 @@
 // ============================================================
 //  手势识别：输入 MediaPipe 的 21 个手部关键点，输出动作名
-//  动作名：'spin' | 'sit' | 'leave' | 'come' | 'pet' | 'roll'
-//         | 'shake' | 'dead' | 'lie' | 'praise' | 'fetch' | 'kiss'
+//  动作名：'spin' | 'sit' | 'leave' | 'come' | 'pet'
+//         | 'shake' | 'dead' | 'praise' | 'fetch' | 'kiss'
 //  关键点坐标需要已经左右镜像（x = 1 - x），和用户看到的方向一致。
 // ============================================================
 
@@ -28,26 +28,24 @@ const DEFAULTS = {
   pullRatio: 0.78,
   petSwings: 2,
   petMinAmplitude: 0.035,
-  petRepeat: 450,   // 一直在摸时，多久再发一次 'pet'
-  flipMs: 900,      // 多长时间内翻完手算数
-  shakeSwings: 2,   // 握手：拳头上下晃几次
+  petRepeat: 450,     // 一直在摸时，多久再发一次 'pet'
+  shakeSwings: 2,     // 握手：拳头上下晃几次
   shakeMinAmplitude: 0.03,
-  bangMinRise: 0.06, // 装死：手枪往上甩多少
-  bangAimMs: 250,    // 装死：甩之前要瞄准停稳多久
-  bangSettleMs: 150, // 装死：甩完要停住多久（确认不是在画圈）
-  lieHoldMs: 700,   // 趴下：握拳停多久
-  praiseHoldMs: 450, // 被夸：大拇指停多久
-  throwMinDist: 0.1, // 扔球：松手时手要甩出去多远
-  heartHoldMs: 300,  // 比心：停多久
+  shakeHoldMs: 500,   // 握手：握拳停住多久
+  bangMinRise: 0.06,  // 装死：两只手枪往上甩多少
+  praiseHoldMs: 450,  // 被夸：大拇指停多久
+  throwMinDist: 0.1,  // 扔球：松手时手要甩出去多远
+  heartHoldMs: 300,   // 比心：停多久
 };
 
 // 距离带上 z（深度），手指对着摄像头时也不容易误判成弯曲
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y, (a.z || 0) - (b.z || 0));
 const dist2d = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
-/** 这段样本里手是不是翻过面（翻手时不判断推/收/摸/握手） */
+/** 这段样本里手是不是翻过面（翻手时不判断收手掌、摆手） */
 const flipped = (run) => run.some((s) => s.facing === 1) && run.some((s) => s.facing === -1);
 const mid = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
 const range = (arr) => Math.max(...arr) - Math.min(...arr);
+const GUNS = ['gun', 'point']; // 双手手枪时拇指不一定看得清，单指也算
 
 /** 数来回摆动的“掉头”次数：往一个方向走够 amp 后又往回走够 amp，算一次 */
 function countSwings(vals, amp) {
@@ -122,20 +120,18 @@ export class GestureDetector {
   }
 
   /**
-   * @param lm  21 个关键点（已镜像），没看到手传 null
-   * @param t   当前时间（毫秒）
-   * @param hand 真实的左右手 'Right' | 'Left'（不知道就传 null，按右手算）
-   * @param other 另一只手的 21 个关键点（已镜像），没有就传 null。只有双手比心用到
-   * @returns {{pose: string|null, gesture: string|null, palmSide: number}}
-   *          palmSide：1 = 手心朝屏幕，-1 = 手背朝屏幕，0 = 侧着/看不清
+   * @param lm    主手的 21 个关键点（已镜像），没看到手传 null
+   * @param t     当前时间（毫秒）
+   * @param other 另一只手的 21 个关键点（已镜像），没有就传 null。双手比心、双手手枪用到
+   * @returns {{pose: string|null, gesture: string|null}}
    */
-  update(lm, t, hand = null, other = null) {
+  update(lm, t, other = null) {
     if (!lm) {
       this.hist = [];
       this.holdLock = null;
       this.heartStart = null;
       this.heartLock = false;
-      return { pose: null, gesture: null, palmSide: 0 };
+      return { pose: null, gesture: null };
     }
     const pose = classifyPose(lm);
     if (this.holdLock && pose !== this.holdLock) this.holdLock = null;
@@ -144,26 +140,30 @@ export class GestureDetector {
       x: palmPts.reduce((s, p) => s + p.x, 0) / 5,
       y: palmPts.reduce((s, p) => s + p.y, 0) / 5,
     };
-    // 手的大小：手腕到中指根。翻手时这段长度基本不变，不会被误认成“推/收”
+    // 手的大小：手腕到中指根。翻手时这段长度基本不变
     const size = dist2d(lm[0], lm[9]);
-    // 手心朝向：手腕→食指根 与 手腕→小指根 的叉积正负，翻手时会变号
+    // 手心朝向：手腕→食指根 与 手腕→小指根 的叉积正负，翻手时会变号（用来排除翻手动作）
     const v1 = { x: lm[5].x - lm[0].x, y: lm[5].y - lm[0].y };
     const v2 = { x: lm[17].x - lm[0].x, y: lm[17].y - lm[0].y };
     const sin = (v1.x * v2.y - v1.y * v2.x) / (Math.hypot(v1.x, v1.y) * Math.hypot(v2.x, v2.y) || 1);
     const facing = sin > 0.3 ? 1 : sin < -0.3 ? -1 : 0;
-    // 同样的叉积，右手手心朝屏幕是 +1，左手要反过来；所以要结合左右手才知道是手心还是手背
-    const palmSide = hand === 'Left' ? -facing : facing;
-    this.hist.push({ t, pose, tip: { x: lm[8].x, y: lm[8].y }, tip2: mid(lm[8], lm[12]), palm, size, facing, palmSide });
+    // 另一只手：手型和食指尖（双手手枪用）
+    const oPose = other ? classifyPose(other) : null;
+    const oTip = other ? { x: other[8].x, y: other[8].y } : null;
+    this.hist.push({
+      t, pose, tip: { x: lm[8].x, y: lm[8].y }, tip2: mid(lm[8], lm[12]), palm, size, facing, oPose, oTip,
+    });
     while (this.hist.length && this.hist[0].t < t - 2000) this.hist.shift();
 
     const heart = this.trackHeart(lm, other, t);
 
     if (t < this.freshUntil) this.hist = this.hist.slice(-1);
-    if (t < this.cooldownUntil) return { pose, gesture: null, palmSide };
+    if (t < this.cooldownUntil) return { pose, gesture: null };
 
-    const g = heart || this.detectThrow(t) || this.detectCircle(t) || this.detectBang(t) || this.detectSwipe(t) || this.detectSit(t) ||
-      this.detectFlip(t) || this.detectPull(t) || this.detectShake(t) || this.detectPet(t) ||
-      this.detectHold(t, 'fist', this.o.lieHoldMs, 'lie') ||
+    const g = heart || this.detectBang(t) || this.detectThrow(t) || this.detectCircle(t) ||
+      this.detectSwipe(t) || this.detectSit(t) || this.detectPull(t) || this.detectShake(t) ||
+      this.detectPet(t) ||
+      this.detectHold(t, 'fist', this.o.shakeHoldMs, 'shake') ||
       this.detectHold(t, 'thumb', this.o.praiseHoldMs, 'praise');
     if (g) {
       if (g === 'pet') {
@@ -173,10 +173,10 @@ export class GestureDetector {
         this.freshUntil = this.cooldownUntil;
         this.hist = [];
       }
-      // 握完手还握着拳，不要接着触发「握拳停住 = 趴下」
+      // 晃完拳头握手后还握着拳，不要接着再触发一次「握拳停住 = 握手」
       if (g === 'shake') this.holdLock = pose;
     }
-    return { pose, gesture: g, palmSide };
+    return { pose, gesture: g };
   }
 
   /** 从最新往回取一段同手型的连续样本（允许偶尔 2 帧识别抖动）。pose 可以是数组 */
@@ -193,7 +193,7 @@ export class GestureDetector {
     return out.reverse();
   }
 
-  // ⑫ 双手比心：两只食指尖碰在一起、两只拇指尖碰在一起，停一下 → 亲亲。一直比着只触发一次
+  // ⑩ 双手比心：两只食指尖碰在一起、两只拇指尖碰在一起，停一下 → 亲亲。一直比着只触发一次
   trackHeart(a, b, t) {
     const size = dist2d(a[0], a[9]) || 1;
     const ok = !!b &&
@@ -211,7 +211,25 @@ export class GestureDetector {
     return 'kiss';
   }
 
-  // ⑪ 捏住（像捏着球）→ 松手的同时往外甩 → 扔球
+  // ⑦ 两只手都比手枪，一起往上甩 → 装死
+  //   以前是单手手枪「瞄准→上甩→停住」，老和食指画圈互相误认（用户真机反馈）。
+  //   改成必须两只手，单手画圈就不可能触发装死了
+  detectBang(t) {
+    const run = this.hist.filter((s) => s.t >= t - 500 && GUNS.includes(s.pose) && GUNS.includes(s.oPose));
+    if (run.length < 4) return null;
+    const last = this.hist[this.hist.length - 1];
+    if (!GUNS.includes(last.pose) || !GUNS.includes(last.oPose)) return null;
+    const rose = (pick) => {
+      const ys = run.map((s) => pick(s).y);
+      const low = run[ys.indexOf(Math.max(...ys))]; // 甩之前最低的位置
+      const rise = pick(low).y - pick(last).y;      // y 向下为正，往上甩 = y 变小
+      const dx = Math.abs(pick(last).x - pick(low).x);
+      return rise >= this.o.bangMinRise && dx <= rise * 0.8;
+    };
+    return rose((s) => s.tip) && rose((s) => s.oTip) ? 'dead' : null;
+  }
+
+  // ⑨ 捏住（像捏着球）→ 松手的同时往外甩 → 扔球
   detectThrow(t) {
     const h = this.hist;
     const last = h[h.length - 1];
@@ -234,7 +252,7 @@ export class GestureDetector {
 
   // ① 食指画圈 → 转圈（单指、手枪都行）
   detectCircle(t) {
-    const run = this.recentRun(['point', 'gun'], 1600, t);
+    const run = this.recentRun(GUNS, 1600, t);
     if (run.length < 10 || run[run.length - 1].t - run[0].t < 350) return null;
     const cx = run.reduce((s, p) => s + p.tip.x, 0) / run.length;
     const cy = run.reduce((s, p) => s + p.tip.y, 0) / run.length;
@@ -253,29 +271,6 @@ export class GestureDetector {
     return Math.abs(total) >= this.o.circleTurns * 2 * Math.PI ? 'spin' : null;
   }
 
-  // ⑧ 比手枪：瞄准停稳 → 快速往上一甩 → 停住 → 装死
-  //   用户真机反馈：画圈前手指会先停一下再往上走，以前会被当成装死。
-  //   所以现在要求甩上去之后手指停住，没有继续往旁边画（画圈会继续横着走）
-  detectBang(t) {
-    const run = this.recentRun('gun', 1400, t);
-    if (run.length < 8) return null;
-    // 最高点（y 最小）
-    let top = run[0];
-    for (const s of run) if (s.tip.y < top.tip.y) top = s;
-    // 甩完要停住一会儿，而且不再横着走
-    const after = run.filter((s) => s.t > top.t);
-    if (!after.length || after[after.length - 1].t - top.t < this.o.bangSettleMs) return null;
-    if (range(after.map((s) => s.tip.x)) > 0.035) return null;
-    // 甩之前要瞄准停稳
-    const pre = run.filter((s) => s.t < top.t - 250);
-    if (pre.length < 4 || pre[pre.length - 1].t - pre[0].t < this.o.bangAimMs - 50) return null;
-    if (range(pre.map((s) => s.tip.x)) > 0.04 || range(pre.map((s) => s.tip.y)) > 0.04) return null;
-    const aim = pre[pre.length - 1];
-    const rise = aim.tip.y - top.tip.y; // y 向下为正，往上甩 = y 变小
-    if (top.t - aim.t > 450) return null; // 要快速甩，慢慢抬不算
-    return rise >= this.o.bangMinRise && Math.abs(top.tip.x - aim.tip.x) <= rise * 0.6 ? 'dead' : null;
-  }
-
   // ② 两指往下滑 → 坐下
   detectSit(t) {
     const run = this.recentRun('two', 700, t);
@@ -288,25 +283,10 @@ export class GestureDetector {
     return dy >= this.o.sitMinDrop && dx <= dy * 0.7 ? 'sit' : null;
   }
 
-  // ⑥ 手背朝屏幕 → 翻成手心朝屏幕 → 翻肚皮
-  //   用户真机反馈：两个方向都算的话，手平时一转就翻肚皮。所以只认「翻到手心」这一个方向，
-  //   而且翻之前手背要朝屏幕至少 3 帧
-  detectFlip(t) {
-    const last = this.hist[this.hist.length - 1];
-    if (!last || last.pose !== 'open' || last.palmSide !== 1) return null;
-    let backs = 0;
-    for (let k = this.hist.length - 2; k >= 0; k--) {
-      const s = this.hist[k];
-      if (s.t < t - this.o.flipMs) break;
-      if (s.pose === 'open' && s.palmSide === -1) backs++;
-    }
-    return backs >= 3 ? 'roll' : null;
-  }
-
   // ③ 食指往旁边快速一划（「去那边」）→ 走开
   //   以前是「手掌往屏幕推」，但摆手、翻手时手会靠近摄像头变大，老被误认（用户真机反馈），所以换掉了
   detectSwipe(t) {
-    const run = this.recentRun(['point', 'gun'], 450, t);
+    const run = this.recentRun(GUNS, 450, t);
     if (run.length < 5) return null;
     const a = run[0].tip;
     const b = run[run.length - 1].tip;
@@ -324,7 +304,7 @@ export class GestureDetector {
   detectPull(t) {
     const run = this.recentRun('open', 700, t);
     if (run.length < 4 || flipped(run)) return null;
-    // 手掌位置基本不动（左右摆、上下抖时手会大幅移动，不算）
+    // 手掌位置基本不动（左右摆时手会大幅移动，不算）
     if (range(run.map((s) => s.palm.x)) > 0.12 || range(run.map((s) => s.palm.y)) > 0.12) return null;
     const baseMax = Math.max(...run.slice(0, 3).map((s) => s.size));
     const now = run[run.length - 1].size;
@@ -344,8 +324,7 @@ export class GestureDetector {
     return countSwings(main, amp) >= need;
   }
 
-  // ⑦ 拳头上下晃（像握着狗爪晃）→ 握手。拇指翘在拳头上面也算
-  //   以前是「张开手掌上下抖」，用户觉得不像握手，改成了握拳
+  // ⑥ 握拳上下晃（像握着狗爪晃）→ 握手。拇指翘在拳头上面也算。握拳停住也是握手（见 detectHold）
   detectShake(t) {
     return this.swingRun(t, 'y', this.o.shakeMinAmplitude, this.o.shakeSwings, ['fist', 'thumb'])
       ? 'shake' : null;
@@ -356,7 +335,7 @@ export class GestureDetector {
     return this.swingRun(t, 'x', this.o.petMinAmplitude, this.o.petSwings) ? 'pet' : null;
   }
 
-  // ⑨ 握拳停住 → 趴下；⑩ 竖大拇指停住 → 被夸。一直停着只触发一次
+  // 停住类：握拳停住 → 握手；竖大拇指停住 → 被夸。一直停着只触发一次
   detectHold(t, pose, ms, gesture) {
     if (this.holdLock === pose) return null;
     const run = this.recentRun(pose, ms + 400, t);

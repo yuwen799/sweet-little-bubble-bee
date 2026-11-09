@@ -34,6 +34,7 @@ function paintSoundButtons() {
 $('musicBtn').addEventListener('click', () => { setMusic(!soundState.music); play('click'); paintSoundButtons(); });
 $('sfxBtn').addEventListener('click', () => { setSfx(!soundState.sfx); paintSoundButtons(); });
 $('langBtn').addEventListener('click', () => { play('click'); setTimeout(switchLanguage, 80); });
+$('homeLink').addEventListener('click', () => play('pop'));
 paintSoundButtons();
 
 const detector = new GestureDetector(CONFIG.gestures);

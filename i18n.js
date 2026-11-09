@@ -37,7 +37,9 @@ const ZH = {
   langTitle: 'Switch to English',
   musicTitle: '背景音乐 开 / 关',
   sfxTitle: '音效 开 / 关',
-  copyright: '© {year} Yuwen Su · 狗狗 Bubble 的形象、画面与代码 · 保留所有权利',
+  copyright: '© {year} {name} · 狗狗 Bubble 的形象、画面与代码 · 保留所有权利',
+  homeLink: '关于我 ↗',
+  homeTitle: '去看看 Yuwen 的个人主页（新标签页打开）',
 };
 
 const EN = {
@@ -59,7 +61,9 @@ const EN = {
   langTitle: '切换到中文',
   musicTitle: 'Music on / off',
   sfxTitle: 'Sound effects on / off',
-  copyright: '© {year} Yuwen Su · Bubble, artwork & code · All rights reserved',
+  copyright: '© {year} {name} · Bubble, artwork & code · All rights reserved',
+  homeLink: 'ABOUT ME ↗',
+  homeTitle: "Visit Yuwen's portfolio (opens in a new tab)",
   // 页面上写死的文字（index.html），英文模式下替换
   static: {
     camStatus: 'Camera off',
@@ -104,7 +108,19 @@ export function applyLanguage() {
   document.getElementById('langBtn')?.setAttribute('title', t('langTitle'));
   document.getElementById('musicBtn')?.setAttribute('title', t('musicTitle'));
   document.getElementById('sfxBtn')?.setAttribute('title', t('sfxTitle'));
-  set0('copyright', t('copyright', { year: new Date().getFullYear() }));
+  set0('homeLink', t('homeLink'));
+  document.getElementById('homeLink')?.setAttribute('title', t('homeTitle'));
+  // 版权里的名字做成个人主页的链接
+  const cr = document.getElementById('copyright');
+  if (cr) {
+    const [before, after] = t('copyright', { year: new Date().getFullYear() }).split('{name}');
+    const a = document.createElement('a');
+    a.href = 'https://yuwensu.com';
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.textContent = 'Yuwen Su';
+    cr.replaceChildren(before, a, after ?? '');
+  }
   if (LANG !== 'en') { document.documentElement.lang = 'zh-CN'; return; }
   const s = EN.static;
   document.documentElement.lang = 'en';

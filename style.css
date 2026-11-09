@@ -620,8 +620,14 @@ body {
 /* ---------- 版权（页面最底下一行小字） ---------- */
 .copyright {
   position: fixed; left: 22px; bottom: 6px; z-index: 5;
-  font: 11px/1.2 var(--sans); color: rgba(11, 11, 12, .55); pointer-events: none;
+  font: 11px/1.2 var(--sans); color: rgba(11, 11, 12, .55);
 }
+.copyright a { color: var(--blue); text-decoration: underline; text-underline-offset: 2px; }
+.copyright a:hover { background: var(--blue); color: var(--cream); text-decoration: none; }
+
+/* 菜单栏里去个人主页的按钮：黄色，比其他按钮显眼 */
+.mbtn.mhome { background: var(--yellow); color: var(--ink); border-color: var(--yellow); text-decoration: none; }
+.mbtn.mhome:hover { background: var(--cream); border-color: var(--cream); }
 
 /* ---------- 页面装饰贴纸（decor.js） ---------- */
 .win { position: relative; }
@@ -683,7 +689,9 @@ body {
   html, body { overflow-x: clip; } /* 随机歪得比较多的贴纸露出右边时，不要让整页能左右滑 */
   .copyright { position: static; display: block; padding: 4px 16px 20px; text-align: center; }
   .mbtn { padding: 3px 5px; font-size: 10px; }
-  .menubar { gap: 10px; }
+  .menubar { gap: 8px; padding: 0 10px; }
+  .menubar .logo { font-size: 10px; letter-spacing: 0; }
+  .menubar .clock { display: none; } /* 手机上菜单栏放不下，时钟先不显示 */
   .deco { height: calc(var(--h) * .6); }
   .menubar .menu, .menubar #poseChip { display: none; }
   .desktop {

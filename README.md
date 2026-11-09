@@ -1,3 +1,4 @@
+A browser-based virtual pet that responds to hand gestures. Wave to pet the dog, or use the keyboard to try the same actions.
 # 🐶 Sweet Little Bubble Bee
 
 **在线试玩：https://yuwen799.github.io/sweet-little-bubble-bee/** （需要允许摄像头；没有摄像头可以按键盘 1–9、0）

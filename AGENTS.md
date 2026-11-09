@@ -149,6 +149,7 @@ node tests/gestures.test.mjs
 
 ## 开发日志（最新的写在最上面）
 
+- **2026-11-08 · Claude**：加网页图标（浏览器标签页原来是默认小地球，控制台的 favicon 404 也一起没了）：从 `idle.gif` 第 0 帧按原生像素裁出狗头，做成 `assets/icons/favicon-32.png`、`favicon-64.png`（透明底）和 `apple-touch-icon.png`（180，蓝底 #2261e9，手机加到主屏幕用），在 `index.html` 的 head 里链接。只本地提交。
 - **2026-11-08 · Claude**：加个人主页入口（用户要求「让用户更加了解我」）：菜单栏 logo 旁边黄色按钮 `#homeLink`（英文 ABOUT ME ↗ / 中文 关于我 ↗），新标签页打开 https://yuwensu.com （用户主页，见主页项目 HANDOFF：源码私有，构建后推到公开仓库 yuwen799/yuwensu.com 用 GitHub Pages）。页面底部版权里的「Yuwen Su」也做成同一链接（`applyLanguage()` 用 `{name}` 占位换成 `<a>`，版权不再 pointer-events: none）。手机布局菜单栏放不下：缩小 logo、隐藏时钟。电脑和手机都看过。只本地提交。
 - **2026-11-08 · Claude**：个人主页不再复制这个原型：已删掉主页里的 `public/play/bubble/` 和 `scripts/sync-bubble.mjs`，主页的 Play 按钮直接在新标签页打开线上版 https://yuwen799.github.io/sweet-little-bubble-bee/ 。以后这里更新只要推到 GitHub Pages，主页不用再同步。
 - **2026-11-08 · Claude**：按用户选择（方法一）公开上线：仓库 `yuwen799/sweet-little-bubble-bee` 改成公开，开了 GitHub Pages（main 分支根目录）。**公开网址：https://yuwen799.github.io/sweet-little-bubble-bee/** ——以后每次 git push 都会自动更新（等一两分钟）。打开过线上网址，图片都 200、动作能播、控制台没报错。公开前检查过仓库：没有密码/密钥，提交作者是 GitHub noreply 邮箱。注意：现在所有文件（包括这份交接文档）任何人都能看到，别往仓库里放私人东西。
